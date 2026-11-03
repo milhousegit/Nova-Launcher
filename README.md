@@ -1,10 +1,12 @@
 # Nova Launcher
 
+![Nova Launcher](app/assets/nova-wordmark.jpg)
+
 A controller-first game launcher for Windows, with a cinematic console interface and a compact desktop library.
 
 ## Download
 
-Download **nova-launcher-v0.1.1.exe** from [Releases](https://github.com/milhousegit/Nova-Launcher/releases). Windows 10/11 x64 is required. English is the default interface language; Italian is available in Settings → Language.
+Download **nova-launcher-v0.1.2.exe** from [Releases](https://github.com/milhousegit/Nova-Launcher/releases). Windows 10/11 x64 is required. English is the default interface language; Italian is available in Settings → Language.
 
 This initial release is unsigned. Windows may display a publisher warning. Verify the SHA-256 checksum provided with the release before installing.
 
