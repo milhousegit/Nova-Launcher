@@ -1,6 +1,6 @@
 {
   "name": "nova-launcher-build",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "scripts": {
     "start": "electron app",
@@ -45,7 +45,7 @@
         }
       ],
       "icon": "app/assets/NOVA.ico",
-      "artifactName": "nova-launcher-v0.1.2.exe",
+      "artifactName": "nova-launcher-v0.1.3.exe",
       "signExecutable": false
     },
     "nsis": {
@@ -58,7 +58,9 @@
       "installerLanguages": [
         "en_US",
         "it_IT"
-      ]
+      ],
+      "installerIcon": "app/assets/NOVA.ico",
+      "uninstallerIcon": "app/assets/NOVA.ico"
     }
   }
 }
