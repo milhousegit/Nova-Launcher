@@ -1,0 +1,64 @@
+{
+  "name": "nova-launcher-build",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "electron app",
+    "dist": "electron-builder --win nsis --x64 --publish never",
+    "test": "node tests/release.cjs && node tests/localization.cjs && node tests/profile-boot.cjs"
+  },
+  "devDependencies": {
+    "electron": "45.2.1",
+    "electron-builder": "26.18.0",
+    "jsdom": "^30.1.3"
+  },
+  "build": {
+    "appId": "Nova.Launcher",
+    "productName": "Nova Launcher",
+    "directories": {
+      "app": "app",
+      "output": "dist"
+    },
+    "asar": true,
+    "files": [
+      "**/*",
+      "!**/data/**",
+      "!**/*.log"
+    ],
+    "extraFiles": [
+      {
+        "from": "tools",
+        "to": "tools",
+        "filter": [
+          "**/*",
+          "!**/*.pdb"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "app/assets/NOVA.ico",
+      "artifactName": "nova-launcher-v0.1.exe",
+      "signExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Nova Launcher",
+      "deleteAppDataOnUninstall": false,
+      "installerLanguages": [
+        "en_US",
+        "it_IT"
+      ]
+    }
+  }
+}

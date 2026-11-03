@@ -1,0 +1,22 @@
+{
+  "name": "nova-launcher",
+  "productName": "Nova Launcher",
+  "version": "0.1.0",
+  "main": "main.cjs",
+  "license": "MIT",
+  "description": "A controller-first Windows game launcher with desktop mode, unified libraries, friends, achievements and personalized discovery.",
+  "dependencies": {
+    "qrcode": "1.5.4",
+    "steam-session": "1.9.4",
+    "steam-user": "5.3.0"
+  },
+  "overrides": {
+    "protobufjs": "8.8.1",
+    "adm-zip": "0.6.1"
+  },
+  "author": "milhousegit",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/milhousegit/Nova-Launcher.git"
+  }
+}

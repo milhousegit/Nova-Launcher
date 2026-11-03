@@ -1,0 +1,27 @@
+using System;using System.Linq;using System.Collections.Generic;using System.Runtime.InteropServices;using System.Text;using System.Security;
+namespace WinhancedBridge
+{
+ internal sealed class WifiAdapter:IDisposable
+ {
+  [StructLayout(LayoutKind.Sequential,CharSet=CharSet.Unicode)]struct InterfaceInfo{public Guid Id;[MarshalAs(UnmanagedType.ByValTStr,SizeConst=256)]public string Name;public int State;}
+  [StructLayout(LayoutKind.Sequential)]struct Ssid{public uint Length;[MarshalAs(UnmanagedType.ByValArray,SizeConst=32)]public byte[] Bytes;}
+  [StructLayout(LayoutKind.Sequential,CharSet=CharSet.Unicode)]struct Available{[MarshalAs(UnmanagedType.ByValTStr,SizeConst=256)]public string Profile;public Ssid Ssid;public int Bss;public uint BssCount;public int Connectable;public uint Reason,PhyCount;[MarshalAs(UnmanagedType.ByValArray,SizeConst=8)]public int[] Phys;public int MorePhys;public uint Signal;public int Security;public int Auth,Cipher;public uint Flags,Reserved;}
+  [StructLayout(LayoutKind.Sequential,CharSet=CharSet.Unicode)]struct Connection{public int Mode;[MarshalAs(UnmanagedType.LPWStr)]public string Profile;public IntPtr Ssid,Bssid;public int Bss;public uint Flags;}
+  [DllImport("wlanapi.dll")]static extern uint WlanOpenHandle(uint version,IntPtr reserved,out uint negotiated,out IntPtr handle);
+  [DllImport("wlanapi.dll")]static extern uint WlanCloseHandle(IntPtr handle,IntPtr reserved);
+  [DllImport("wlanapi.dll")]static extern uint WlanEnumInterfaces(IntPtr handle,IntPtr reserved,out IntPtr list);
+  [DllImport("wlanapi.dll")]static extern uint WlanGetAvailableNetworkList(IntPtr handle,ref Guid id,uint flags,IntPtr reserved,out IntPtr list);
+  [DllImport("wlanapi.dll")]static extern void WlanFreeMemory(IntPtr memory);
+  [DllImport("wlanapi.dll")]static extern uint WlanScan(IntPtr handle,ref Guid id,IntPtr ssid,IntPtr data,IntPtr reserved);
+  [DllImport("wlanapi.dll")]static extern uint WlanConnect(IntPtr handle,ref Guid id,ref Connection connection,IntPtr reserved);
+  [DllImport("wlanapi.dll")]static extern uint WlanDisconnect(IntPtr handle,ref Guid id,IntPtr reserved);
+  [DllImport("wlanapi.dll",CharSet=CharSet.Unicode)]static extern uint WlanSetProfile(IntPtr handle,ref Guid id,uint flags,string xml,string security,int overwrite,IntPtr reserved,out uint reason);
+  IntPtr handle;internal sealed class Network{internal Guid Adapter;internal string Name,Profile;internal int Auth;internal bool Secure,Connected;internal uint Signal;}
+  static void Check(uint code){if(code!=0)throw new System.ComponentModel.Win32Exception((int)code);}
+  internal WifiAdapter(){uint version;Check(WlanOpenHandle(2,IntPtr.Zero,out version,out handle));}
+  internal List<Network> List(bool scan=false){IntPtr interfaces;Check(WlanEnumInterfaces(handle,IntPtr.Zero,out interfaces));var result=new List<Network>();try{var count=Marshal.ReadInt32(interfaces);for(int i=0;i<count;i++){var info=(InterfaceInfo)Marshal.PtrToStructure(IntPtr.Add(interfaces,8+i*Marshal.SizeOf(typeof(InterfaceInfo))),typeof(InterfaceInfo));if(scan)WlanScan(handle,ref info.Id,IntPtr.Zero,IntPtr.Zero,IntPtr.Zero);IntPtr networks;Check(WlanGetAvailableNetworkList(handle,ref info.Id,0,IntPtr.Zero,out networks));try{var n=Marshal.ReadInt32(networks);for(int j=0;j<n;j++){var item=(Available)Marshal.PtrToStructure(IntPtr.Add(networks,8+j*Marshal.SizeOf(typeof(Available))),typeof(Available));var name=Encoding.UTF8.GetString(item.Ssid.Bytes,0,(int)Math.Min(32,item.Ssid.Length));if(name.Length==0)continue;result.Add(new Network{Adapter=info.Id,Name=name,Profile=item.Profile,Auth=item.Auth,Secure=item.Security!=0,Connected=(item.Flags&1)!=0,Signal=item.Signal});}}finally{WlanFreeMemory(networks);}}}finally{WlanFreeMemory(interfaces);}return result.OrderByDescending(n=>n.Connected).ThenByDescending(n=>n.Signal).GroupBy(n=>n.Name).Select(g=>g.First()).ToList();}
+  internal void Connect(Network network,string password){var profile=network.Profile;if(string.IsNullOrEmpty(profile)){if(network.Secure&&network.Auth!=7)throw new InvalidOperationException("Questa rete richiede un profilo Windows già configurato (rete aziendale o autenticazione speciale).");profile=network.Name;var name=SecurityElement.Escape(network.Name);var key=SecurityElement.Escape(password??"");var security=network.Secure?"<authentication>WPA2PSK</authentication><encryption>AES</encryption><useOneX>false</useOneX>":"<authentication>open</authentication><encryption>none</encryption><useOneX>false</useOneX>";var secret=network.Secure?"<sharedKey><keyType>passPhrase</keyType><protected>false</protected><keyMaterial>"+key+"</keyMaterial></sharedKey>":"";var xml="<?xml version=\"1.0\"?><WLANProfile xmlns=\"http://www.microsoft.com/networking/WLAN/profile/v1\"><name>"+name+"</name><SSIDConfig><SSID><name>"+name+"</name></SSID></SSIDConfig><connectionType>ESS</connectionType><connectionMode>auto</connectionMode><MSM><security><authEncryption>"+security+"</authEncryption>"+secret+"</security></MSM></WLANProfile>";uint reason;Check(WlanSetProfile(handle,ref network.Adapter,2,xml,null,1,IntPtr.Zero,out reason));}var connection=new Connection{Mode=0,Profile=profile,Bss=3};Check(WlanConnect(handle,ref network.Adapter,ref connection,IntPtr.Zero));}
+  internal void Disconnect(Network network){Check(WlanDisconnect(handle,ref network.Adapter,IntPtr.Zero));}
+  public void Dispose(){if(handle!=IntPtr.Zero){WlanCloseHandle(handle,IntPtr.Zero);handle=IntPtr.Zero;}}
+ }
+}

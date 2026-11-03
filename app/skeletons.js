@@ -1,0 +1,1 @@
+function skeletonMarkup(kind='cards',count=6){const shapes=Array.from({length:count},()=>'<div class="nova-skeleton-item"><i></i><b></b><small></small></div>').join('');return '<div class="nova-skeleton '+kind+'" role="status" aria-label="Caricamento" aria-busy="true">'+shapes+'</div>';}

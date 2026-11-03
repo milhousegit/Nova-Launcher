@@ -1,0 +1,4 @@
+// Only the background responds to reading depth; focus and foreground images stay sharp.
+let contrastFrame=0;
+function updateDetailContrast(){const backdrop=document.getElementById('backdrop'),main=document.getElementById('main');if(!backdrop||!main)return;let value=0;if(detailGame||(typeof shopGame!=="undefined"&&shopGame)){const content=document.getElementById('game-tab-content');const anchor=content?content.getBoundingClientRect().top-main.getBoundingClientRect().top+main.scrollTop:600;value=window.novaMedia.depth(main.scrollTop,anchor);}backdrop.style.setProperty('--detail-depth',value.toFixed(3));}
+document.getElementById('main').addEventListener('scroll',()=>{if(contrastFrame)return;contrastFrame=requestAnimationFrame(()=>{contrastFrame=0;updateDetailContrast();});},{passive:true});window.addEventListener('resize',updateDetailContrast);updateDetailContrast();

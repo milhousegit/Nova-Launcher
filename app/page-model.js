@@ -1,0 +1,20 @@
+(function(root,factory){if(typeof module==='object'&&module.exports)module.exports=factory();else root.novaContent=factory();})(globalThis,()=>{
+ const decode=s=>String(s||'').replace(/&nbsp;/gi,' ').replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;|&apos;/gi,"'").replace(/&lt;/gi,'<').replace(/&gt;/gi,'>');
+ function imageUrl(value){value=decode(value).trim().replace('{STEAM_CLAN_IMAGE}','https://clan.cloudflare.steamstatic.com/images');try{const u=new URL(value);return u.protocol==='https:'?u.href:'';}catch{return '';}}
+ function articleBlocks(raw){let text=String(raw||'').slice(0,1000000),images=[];const image=value=>{const url=imageUrl(value);if(!url)return '';const index=images.push(url)-1;return '\n\n@@IMAGE'+index+'@@\n\n';};
+  text=text.replace(/<script\b[^>]*>[\s\S]*?<\/script>|<style\b[^>]*>[\s\S]*?<\/style>|<iframe\b[^>]*>[\s\S]*?<\/iframe>/gi,'');
+  text=text.replace(/\[img\b[^\]]*\bsrc\s*=\s*["']([^"']+)["'][^\]]*\](?:\s*\[\/img\])?/gi,(_,u)=>image(u));
+  text=text.replace(/\[\/?p\]/gi,'\n\n');
+  text=text.replace(/\[img\][\s\S]*?\[\/img\]/gi,m=>image(m.slice(5,-6))).replace(/<img\b[^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*>/gi,(_,u)=>image(u));
+  text=text.replace(/\[h[1-6]\]([\s\S]*?)\[\/h[1-6]\]/gi,'\n\n## $1\n\n').replace(/<h[1-6][^>]*>([\s\S]*?)<\/h[1-6]>/gi,'\n\n## $1\n\n');
+  text=text.replace(/\[\*\]/g,'\n• ').replace(/\[url(?:=[^\]]*)?\]([\s\S]*?)\[\/url\]/gi,'$1').replace(/\[(?:\/?(?:b|i|u|s|list|olist|quote|code|p|table|tr|td|th|spoiler|hr)|(?:color|size|url|img)=[^\]]*)\]/gi,'').replace(/\[previewyoutube=[\s\S]*?\[\/previewyoutube\]/gi,'');
+  text=text.replace(/<br\s*\/?\s*>|<\/(?:p|div|li|ul|ol|blockquote)>/gi,'\n\n').replace(/<[^>]*>/g,'');
+  return text.split(/\n\s*\n/).map(s=>decode(s).trim()).filter(Boolean).flatMap(s=>{if(/^#+$/.test(s))return [];const marker=s.match(/^@@IMAGE(\d+)@@$/);if(marker)return [{type:'image',url:images[Number(marker[1])]}];return [{type:s.startsWith('## ')?'heading':'text',text:s.replace(/^## /,'')}];});
+ }
+ function newsPreview(raw){const blocks=articleBlocks(raw);return {image:blocks.find(b=>b.type==='image')?.url||'',excerpt:blocks.filter(b=>b.type==='text').map(b=>b.text).join(' ').replace(/\s+/g,' ').slice(0,200)};}
+ function filterGames(games,{query='',genre='',platform='',status='all'}={}){return games.filter(g=>(!query||g.title.toLowerCase().includes(query.toLowerCase()))&&(!genre||(g.genres||[]).includes(genre))&&(!platform||(g.sources||[]).includes(platform))&&(status!=='installed'||g.installed)&&(status!=='never'||!(g.playtime>0)&&!(Date.parse(g.lastPlayed)>0)));}
+
+ function uniqueNews(items){const seen=new Set(),out=[];for(const n of [...(items||[])].sort((a,b)=>Number(b.date)-Number(a.date))){const title=String(n.title||'').toLowerCase().replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim(),body=String(n.contents||n.excerpt||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim(),keys=[];if(n.gid)keys.push('gid:'+n.gid);if(n.url){try{const u=new URL(n.url);u.hash='';for(const key of [...u.searchParams.keys()])if(/^(utm_|snr|source|ref)/i.test(key))u.searchParams.delete(key);keys.push('url:'+u.href.replace(/\/$/,''));const id=u.pathname.match(/\/(?:detail|view)\/(\d+)/)?.[1];if(id)keys.push('gid:'+id);}catch{}}if(title&&body)keys.push('body:'+Math.floor(Number(n.date)/86400)+':'+title+':'+body);if(keys.some(k=>seen.has(k)))continue;keys.forEach(k=>seen.add(k));out.push(n);}return out;}
+ function feed(news,achievements,friends){const entries=uniqueNews(news).map(n=>({type:'news',key:'news:'+n.gid,title:n.title,date:Number(n.date)*1000,gid:n.gid,image:n.image||'',imageKind:n.imageKind||'',excerpt:n.excerpt||''}));for(const a of achievements||[])if(a.unlocked&&a.date)entries.push({type:'achievement',key:'self:'+(a.id||a.name),title:a.name,description:a.description,icon:a.icon,date:Date.parse(a.date),source:(a.unlockSources||[]).join(', ')});for(const f of friends||[])entries.push({...f,type:'friendAchievement',key:'friend:'+f.friendId+':'+f.id});return entries.filter(e=>Number.isFinite(e.date)).sort((a,b)=>b.date-a.date);}
+ return {uniqueNews,articleBlocks,newsPreview,filterGames,feed};
+});
