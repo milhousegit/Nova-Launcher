@@ -6,12 +6,17 @@ A controller-first game launcher for Windows, with a cinematic console interface
 
 ## Download
 
-Download **nova-launcher-v0.1.3.exe** from [Releases](https://github.com/milhousegit/Nova-Launcher/releases). Windows 10/11 x64 is required. English is the default interface language; Italian is available in Settings → Language.
+Download **nova-launcher-v0.1.4.exe** from [Releases](https://github.com/milhousegit/Nova-Launcher/releases). Windows 10/11 x64 is required. English is the default interface language; Italian is available in Settings → Language.
 
 This initial release is unsigned. Windows may display a publisher warning. Verify the SHA-256 checksum provided with the release before installing.
 
+Visit [Nova Web](https://novalaunchergame.vercel.app) for the animated product home and your private cloud library.
+
 ## Features
 
+- Automatic stable-release checks, verified installer downloads and release notes in Settings. Installation is initiated by the user.
+- Purple default accent, extended Nova wordmark and matching application/favicon/fallback artwork.
+- Private web friends list relayed from Nova on Windows; presence older than 90 seconds is marked as last activity.
 - Console and desktop layouts, gamepad navigation, persistent focus, and on-screen keyboard options.
 - Unified installed games and connected store libraries, source selection, favorites and search.
 - Steam Guard QR sign-in with an encrypted local session, automatic session reuse and token renewal.

@@ -1,7 +1,7 @@
 {
   "name": "nova-launcher",
   "productName": "Nova Launcher",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "main": "main.cjs",
   "license": "MIT",
   "description": "A controller-first Windows game launcher with desktop mode, unified libraries, friends, achievements and personalized discovery.",

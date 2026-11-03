@@ -20,5 +20,6 @@ module.exports=function({data,safeStorage,fetcher=fetch,onMerge=()=>{}}){
  function push(payload){const uid=session?.user?.id;pushTask=pushTask.catch(()=>{}).then(()=>{if(uid!==session?.user?.id)throw Error('Profilo cambiato durante la sincronizzazione.');return pushOnce(payload);});return pushTask;}
  let syncTask=Promise.resolve();function queue(snapshot){clearTimeout(timer);timer=setTimeout(()=>{syncTask=syncTask.catch(()=>{}).then(()=>push(snapshot())).catch(e=>{error=e.message});},2200);timer.unref?.();}
  async function signout(){clearTimeout(timer);await syncTask.catch(()=>{});if(session)await request('/auth/v1/logout',{method:'POST',auth:true}).catch(()=>{});session=null;revision=0;persist();}
- return {initialize,status,auth,pull,push,queue,signout,token,refresh,remoteSync};
+ async function presence(payload){const uid=session?.user?.id;if(!uid)return;await request('/rest/v1/nova_friends',{method:'POST',auth:true,body:{user_id:uid,payload,updated_at:new Date().toISOString()},headers:{Prefer:'resolution=merge-duplicates'}});}
+ return {initialize,status,auth,pull,push,queue,signout,token,refresh,remoteSync,presence};
 };
