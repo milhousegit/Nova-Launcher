@@ -4,7 +4,7 @@ A controller-first game launcher for Windows, with a cinematic console interface
 
 ## Download
 
-Download **nova-launcher-v0.1.exe** from [Releases](https://github.com/milhousegit/Nova-Launcher/releases). Windows 10/11 x64 is required. English is the default interface language; Italian is available in Settings → Language.
+Download **nova-launcher-v0.1.1.exe** from [Releases](https://github.com/milhousegit/Nova-Launcher/releases). Windows 10/11 x64 is required. English is the default interface language; Italian is available in Settings → Language.
 
 This initial release is unsigned. Windows may display a publisher warning. Verify the SHA-256 checksum provided with the release before installing.
 
@@ -53,3 +53,9 @@ npm run dist
 ```
 
 The application code is MIT licensed. Third-party components retain their own licenses. Nova is not affiliated with Valve, Discord, SteamGridDB, Hydra, Playnite or the listed stores.
+
+## Nova Web companion
+
+Use [Nova Web](https://nova-launcher-web-ten.vercel.app) with the same Nova account to browse the cloud library, discover games and edit your wishlist. Explore and Wishlist refresh automatically when opened. Store sessions remain on your PC; Supabase contains synchronized library metadata, preferences and progress. Nova account sign-in is managed separately by Supabase Auth.
+
+Version 0.1.1 adds the desktop bridge: keep Nova open and signed in to receive web requests to update store libraries. The bridge also merges concurrent wishlist changes instead of overwriting another device's edits. See [web/README.md](web/README.md).
