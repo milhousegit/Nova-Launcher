@@ -8,4 +8,4 @@
 .friend-card .friend-platforms{display:inline-flex;gap:5px;vertical-align:middle;margin:0 0 0 8px}.friend-platform-icon{width:15px;height:15px;object-fit:contain;filter:grayscale(1) brightness(1.5)}
 
 /* Native PNG alpha; no blend mode or JPEG crop required. */
-.nova-wordmark{mix-blend-mode:normal;aspect-ratio:1120/323}.nova-wordmark>img{position:static;display:block;max-width:100%;width:100%;height:100%;left:auto;top:auto;object-fit:contain}
+.nova-wordmark{mix-blend-mode:normal;aspect-ratio:1029/273}.nova-wordmark>img{position:static;display:block;max-width:100%;width:100%;height:100%;left:auto;top:auto;object-fit:contain}

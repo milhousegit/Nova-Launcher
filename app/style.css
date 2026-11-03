@@ -132,4 +132,4 @@ body[data-page="signin"] #main{inset:0;padding:6vw}body[data-page="signin"] foot
 .release-notes{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;line-height:1.65;color:var(--muted);padding:20px;border-radius:16px;background:#ffffff08;}
 
 /* Native PNG alpha; no blend mode or JPEG crop required. */
-.nova-wordmark{mix-blend-mode:normal;aspect-ratio:1120/323}.nova-wordmark>img{position:static;display:block;max-width:100%;width:100%;height:100%;left:auto;top:auto;object-fit:contain}
+.nova-wordmark{mix-blend-mode:normal;aspect-ratio:1029/273}.nova-wordmark>img{position:static;display:block;max-width:100%;width:100%;height:100%;left:auto;top:auto;object-fit:contain}
