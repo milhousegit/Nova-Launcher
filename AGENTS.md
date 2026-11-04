@@ -10,3 +10,8 @@
 - Le limitazioni Linux già presenti non sono un'esenzione: per ogni modifica valuta l'impatto su entrambe le versioni e segnala eventuali impedimenti alla parità funzionale.
 
 Queste istruzioni valgono per tutto il repository e per le nuove sessioni che lo aprono. Mantienile nel controllo versione affinché siano disponibili anche nei nuovi checkout.
+
+## Release language
+
+- Always write release titles, release notes, changelog entries and release-related user-facing metadata in English, including official releases and prereleases. This is the default for future sessions, regardless of the language used in chat.
+- Describe additions, fixes, required migrations, validation and platform limitations accurately. Never describe a tag or a prepared artifact as a published release without verifying publication.

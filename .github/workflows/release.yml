@@ -3,6 +3,12 @@ on:
   push:
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to build and publish
+        required: true
+        default: v0.1.6
+        type: string
 permissions:
   contents: read
 jobs:
@@ -14,6 +20,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: '24.22.1'
@@ -25,8 +33,10 @@ jobs:
             web/package-lock.json
       - name: Verify release version
         shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         run: |
-          node -e 'const p=require("./package.json"),a=require("./app/package.json");if(p.version!==a.version)throw Error("Version mismatch");if(process.env.GITHUB_REF_TYPE==="tag"&&process.env.GITHUB_REF_NAME!=="v"+p.version)throw Error("Tag mismatch")'
+          node -e 'const p=require("./package.json"),a=require("./app/package.json");if(p.version!==a.version)throw Error("Version mismatch");if(process.env.RELEASE_TAG!=="v"+p.version)throw Error("Tag mismatch")'
       - run: npm ci
       - run: npm --prefix app ci
       - run: npm --prefix tools ci
@@ -52,13 +62,16 @@ jobs:
             dist/nova-launcher-v*.exe
             dist/nova-launcher-v*.AppImage
   publish:
-    if: startsWith(github.ref, 'refs/tags/')
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
     needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: release-metadata
       - uses: actions/download-artifact@v4
         with:
           pattern: release-*
@@ -67,7 +80,7 @@ jobs:
       - name: Publish official release with both installers
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
           RELEASE_REPO: ${{ github.repository }}
         shell: bash
         run: |
@@ -75,4 +88,4 @@ jobs:
           test -f "release/nova-launcher-${RELEASE_TAG}.exe"
           test -f "release/nova-launcher-${RELEASE_TAG}-linux-x86_64.AppImage"
           (cd release && sha256sum *.exe *.AppImage > SHA256SUMS.txt)
-          gh release create "$RELEASE_TAG" release/*.exe release/*.AppImage release/SHA256SUMS.txt --repo "$RELEASE_REPO" --verify-tag --title "Nova Launcher ${RELEASE_TAG}" --notes-file RELEASE_NOTES.md --latest
+          gh release create "$RELEASE_TAG" release/*.exe release/*.AppImage release/SHA256SUMS.txt --repo "$RELEASE_REPO" --verify-tag --title "Nova Launcher ${RELEASE_TAG}" --notes-file release-metadata/RELEASE_NOTES.md --latest
