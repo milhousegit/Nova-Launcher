@@ -26,3 +26,27 @@ The browser bundle contains only the publishable Supabase key. Fork maintainers 
 ## Tests
 
 `npm test` checks the browser model. Run `node ui.test.mjs` with the root development dependencies installed for synthetic signed-in UI tests, including automatic page refresh. Database isolation, cross-user writes and wishlist add/remove are also tested transactionally against the deployed database with rolled-back fixtures. Anonymous API requests are rejected.
+
+## Artwork and mobile library
+
+SteamGridDB is optional. Public Steam covers are retrieved without an API key. A
+SteamGridDB key enables searching its alternative artwork; titles without Steam
+art or a catalog match may still have no cover. Selected HTTPS artwork URLs sync
+with the Nova profile and are displayed on the web without supplying the key.
+Local files selected by older Nova builds have no recoverable source URL: select
+that artwork again in the updated desktop client to sync it across devices.
+
+Before distributing the updated desktop client, apply
+`supabase/artwork-credentials.sql` in the Supabase SQL editor. It creates an
+owner-scoped RLS table for the SteamGridDB key, separate from library snapshots
+and the public catalog. The authenticated owner's clients can retrieve the key;
+this is not end-to-end encryption. Local credentials remain protected with
+Windows safeStorage. No store sessions are uploaded. Desktop profile startup and
+library/profile sync retrieve the key; connecting SteamGridDB uploads it and
+retries missing artwork. A failed credential upload is reported instead of
+claiming cloud sync succeeded.
+
+Run `npm test` at the root, `npm test` and `npm run build` in `web/`, and
+`node web/ui.test.mjs` from the root. Publish the updated `web/public/` directory
+to update the website, and distribute a new Windows desktop build for its fixes.
+The database migration and deployments are separate from local test validation.

@@ -1,4 +1,4 @@
-// Isolated read-only Discord Social SDK adapter. Native SDK callbacks never run in Playnite.
+// Isolated read-only Discord Social SDK adapter. Native SDK callbacks stay inside the adapter process.
 using System;using System.IO;using System.Linq;using System.Text;using System.Collections.Generic;using System.Runtime.InteropServices;using System.Security.Cryptography;using System.Threading;using System.Web.Script.Serialization;
 class DiscordAdapter
 {

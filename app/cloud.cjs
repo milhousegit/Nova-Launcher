@@ -21,5 +21,11 @@ module.exports=function({data,safeStorage,fetcher=fetch,onMerge=()=>{}}){
  let syncTask=Promise.resolve();function queue(snapshot){clearTimeout(timer);timer=setTimeout(()=>{syncTask=syncTask.catch(()=>{}).then(()=>push(snapshot())).catch(e=>{error=e.message});},2200);timer.unref?.();}
  async function signout(){clearTimeout(timer);await syncTask.catch(()=>{});if(session)await request('/auth/v1/logout',{method:'POST',auth:true}).catch(()=>{});session=null;revision=0;persist();}
  async function presence(payload){const uid=session?.user?.id;if(!uid)return;await request('/rest/v1/nova_friends',{method:'POST',auth:true,body:{user_id:uid,payload,updated_at:new Date().toISOString()},headers:{Prefer:'resolution=merge-duplicates'}});}
- return {initialize,status,auth,pull,push,queue,signout,token,refresh,remoteSync,presence};
+ // Dedicated owner-scoped table: credentials never enter the library snapshot.
+ async function gridSettings(key){
+  const uid=session?.user?.id;if(!uid)throw Error('Accedi al tuo profilo Nova.');
+  if(key!==undefined){if(!/^[a-f0-9]{32}$/i.test(key))throw Error('Chiave SteamGridDB non valida.');await request('/rest/v1/nova_artwork_credentials',{method:'POST',auth:true,body:{user_id:uid,sg_key:key,updated_at:new Date().toISOString()},headers:{Prefer:'resolution=merge-duplicates'}});}
+  else {const rows=await request('/rest/v1/nova_artwork_credentials?user_id=eq.'+encodeURIComponent(uid)+'&select=sg_key',{auth:true});if(uid!==session?.user?.id)throw Error('Profilo cambiato durante la sincronizzazione.');return rows?.[0]?.sg_key||'';}
+ }
+ return {initialize,status,auth,pull,push,queue,signout,token,refresh,remoteSync,presence,gridSettings};
 };

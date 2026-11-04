@@ -4,3 +4,21 @@ const context={};vm.createContext(context);vm.runInContext(fs.readFileSync(path.
 let qrStarts=0,saved={refreshToken:'fixture-only',userId:'76561198000000001'},client;class FakeSteam extends EventEmitter{constructor(options){super();client=this;this.options=options;this.licenses=[{package_id:1,time_created:1600000000},{package_id:2,time_created:1700000000}];this.picsCache={packages:{1:{packageinfo:{appids:[10]}},2:{packageinfo:{appids:[20]}}},apps:{10:{appinfo:{common:{name:'Older',type:'game'}}},20:{appinfo:{common:{name:'Newer',type:'game'}}}}};}logOn(){this.steamID={};}logOff(){}getOwnedApps(){return [10,20]}async getUserOwnedApps(){return {apps:[]}}webLogOn(){}}
 FakeSteam.ELicenseFlags={Expired:1};class Session extends EventEmitter{async startWithQR(){qrStarts++;return {qrChallengeUrl:'fixture'}}cancelLoginAttempt(){}}
 let result;const mod={exports:{}};const env={module:mod,require:n=>n==='steam-session'?{LoginSession:Session,EAuthTokenPlatformType:{SteamClient:1}}:n==='steam-user'?FakeSteam:n==='qrcode'?{toDataURL:async()=>''}:require(n),Buffer,Date};vm.runInNewContext(fs.readFileSync(path.join(base,'steam-qr.cjs'),'utf8'),env);const bridge=mod.exports({credentials:()=>({steamSession:saved}),save:v=>saved=v,notify(){},onReady:async()=>{},onLicenses:v=>result=v});bridge.resume();assert.equal(qrStarts,0);assert(client.options.renewRefreshTokens);const original=client;bridge.resume();assert.equal(client,original);client.emit('refreshToken','renewed-fixture');assert.equal(saved.refreshToken,'renewed-fixture');client.emit('ownershipCached');setImmediate(()=>{assert.equal(result[1].acquiredAt,new Date(1700000000000).toISOString());bridge.stop();bridge.resume();assert.equal(qrStarts,0);assert.equal(bridge.status().configured,true);console.log('PASS: script syntax, acquisition sorting, missing dates last, saved Steam session reuse/restart, token renewal and license date mapping.');});
+
+// Detail normalization uses only the game's own metadata, without reading external caches.
+{
+ const module={exports:{}};
+ vm.runInNewContext(fs.readFileSync(path.join(base,'library.cjs'),'utf8'),{module,process,require:name=>name==='fs'?{readFileSync(){throw Error('Unexpected metadata cache access')}}:name==='./page-model.js'?require(path.join(base,name)):require(name)});
+ const game={description:'<p>Nova &amp; friends</p>',screenshots:['https://example.com/screen.jpg'],genres:['Adventure'],developers:['Studio'],release:'2026'};
+ assert.equal(module.exports.enrich(game),game);
+ assert.equal(game.description,'Nova & friends');
+ assert.deepEqual(game.screenshots,['https://example.com/screen.jpg']);
+ assert.deepEqual(game.genres,['Adventure']);
+ const empty=module.exports.enrich({});
+ assert.equal(empty.description,'');
+ assert.equal(empty.screenshots.length,0);
+ assert.equal(empty.genres.length,0);
+ assert.equal(empty.developers.length,0);
+ assert.equal(empty.release,'');
+ console.log('PASS: local game metadata is preserved and normalized without external cache reads.');
+}

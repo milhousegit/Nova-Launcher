@@ -6,7 +6,6 @@ The Nova application source is MIT licensed. Third-party assets and binaries are
 - Node.js 24.22.1 — license included in `tools/LICENSE-Node.txt`.
 - steam-session, steam-user, qrcode and dependencies — see each npm package's license. Runtime dependencies are pinned in `app/package-lock.json`.
 - classic-level and dependencies — licenses included in the installed `tools/node_modules` packages.
-- LiteDB 4.1.4 — MIT, David F. Alves; `tools/exporter/LICENSE-LiteDB.txt`.
 - NAudio — MIT; `tools/NAudio.LICENSE.txt`.
 - Newtonsoft.Json — MIT; https://github.com/JamesNK/Newtonsoft.Json/blob/master/LICENSE.md
 - Ludusavi 0.29.0 — MIT; `tools/ludusavi/LICENSE`. Additional upstream dependency notices: https://github.com/mtkennerly/ludusavi/releases/tag/v0.29.0
@@ -16,4 +15,4 @@ The Nova application source is MIT licensed. Third-party assets and binaries are
 
 Store logos and merchant marks identify their respective services. Game artwork belongs to its owners and contributors and is fetched at runtime; personal cached game artwork is not distributed.
 
-Steam, Hydra, Playnite and other store clients are not bundled. No Simplewall code is included: the temporary Steam network filter is implemented by Nova's own Windows helper.
+Steam, Hydra and other store clients are not bundled. No Simplewall code is included: the temporary Steam network filter is implemented by Nova's own Windows helper.

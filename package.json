@@ -1,11 +1,12 @@
 {
   "name": "nova-launcher-build",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "private": true,
   "scripts": {
     "start": "electron app",
     "dist": "electron-builder --win nsis --x64 --publish never",
-    "test": "node tests/release.cjs && node tests/localization.cjs && node tests/profile-boot.cjs && node tests/web-sync.cjs && node tests/updates.cjs"
+    "test": "node tests/release.cjs && node tests/localization.cjs && node tests/profile-boot.cjs && node tests/web-sync.cjs && node tests/updates.cjs && node tests/artwork.cjs && node tests/personal-profile.cjs",
+    "dist:linux": "electron-builder --linux AppImage --x64 --publish never"
   },
   "devDependencies": {
     "electron": "45.2.1",
@@ -25,16 +26,6 @@
       "!**/data/**",
       "!**/*.log"
     ],
-    "extraFiles": [
-      {
-        "from": "tools",
-        "to": "tools",
-        "filter": [
-          "**/*",
-          "!**/*.pdb"
-        ]
-      }
-    ],
     "win": {
       "target": [
         {
@@ -45,8 +36,18 @@
         }
       ],
       "icon": "app/assets/NOVA.ico",
-      "artifactName": "nova-launcher-v0.1.5.exe",
-      "signExecutable": false
+      "artifactName": "nova-launcher-v${version}.exe",
+      "signExecutable": false,
+      "extraFiles": [
+        {
+          "from": "tools",
+          "to": "tools",
+          "filter": [
+            "**/*",
+            "!**/*.pdb"
+          ]
+        }
+      ]
     },
     "nsis": {
       "oneClick": false,
@@ -61,6 +62,27 @@
       ],
       "installerIcon": "app/assets/NOVA.ico",
       "uninstallerIcon": "app/assets/NOVA.ico"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "category": "Game",
+      "icon": "app/assets/NOVA.png",
+      "artifactName": "nova-launcher-v${version}-linux-${arch}.AppImage",
+      "extraFiles": [],
+      "executableName": "nova-launcher",
+      "desktop": {
+        "entry": {
+          "Name": "Nova Launcher",
+          "Comment": "Nova Launcher Linux preview"
+        }
+      }
     }
   }
 }

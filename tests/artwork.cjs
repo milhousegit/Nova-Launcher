@@ -1,0 +1,20 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+const {portable,restore}=require('../app/profile-data.cjs'),{merge}=require('../app/cloud-merge.cjs');
+const url='https://cdn2.steamgriddb.com/grid/fixture.png',game={id:'steam:10',steamId:'10',title:'Fixture',cover:'file:///private/cover.png',copies:[]};
+const snapshot=portable({games:[game]},{artwork:{[game.id]:{cover:url,hero:'file:///private/hero.png'}},sgKey:'never-upload'},{});
+assert.equal(snapshot.games[0].cover,url);assert.equal(snapshot.preferences.artwork[game.id].cover,url);assert(!JSON.stringify(snapshot).includes('file:'));assert(!JSON.stringify(snapshot).includes('never-upload'));
+const preferences={artwork:{}},library={games:[]};restore(snapshot,library,preferences);assert.equal(preferences.artwork[game.id].cover,url);
+const base={preferences:{artwork:{a:{cover:'old',hero:'old-hero'}},favorites:{a:true}}},local={preferences:{artwork:{a:{cover:'local',hero:'old-hero'}},favorites:{a:true,b:true}}},remote={preferences:{artwork:{a:{cover:'old',hero:'remote-hero'},b:{cover:'remote'}},favorites:{a:false}}};
+const combined=merge(base,local,remote);assert.deepEqual(combined.preferences.artwork,{a:{cover:'local',hero:'remote-hero'},b:{cover:'remote'}});assert.deepEqual(combined.preferences.favorites,{a:false,b:true});
+const dir=fs.mkdtempSync(path.join(os.tmpdir(),'nova-artwork-')),originalFetch=global.fetch;
+(async()=>{try{
+ global.fetch=async()=>new Response(Buffer.from('fixture image'));
+ const prefs={artwork:{},artworkChecked:{}};
+ await require('../app/artwork-worker.cjs')({games:[{id:'steam:10',steamId:'10',title:'Fixture'}],data:dir,preferences:prefs,nativeImage:{createFromBuffer:()=>({isEmpty:()=>false,getSize:()=>({width:600,height:900}),toPNG:()=>Buffer.from('fixture')})},sg:async()=>({data:[]}),save(){},notify(){}});
+ assert.match(prefs.artwork['steam:10'].cover,/^https:/);assert(!('hero' in prefs.artwork['steam:10']));
+ global.fetch=async()=>new Response(null,{status:404});
+ prefs.artworkChecked={};prefs.artwork['steam:10'].hero='https://example.com/prior-hero.jpg';
+ await require('../app/artwork-worker.cjs')({games:[{id:'steam:10',steamId:'10',title:'Fixture'}],data:dir,preferences:prefs,nativeImage:{},sg:async()=>{throw Error('No API key')},save(){},notify(){}});
+ assert.equal(prefs.artwork['steam:10'].hero,'https://example.com/prior-hero.jpg');
+ console.log('PASS: artwork URL portability, profile restore, concurrent per-game/per-field edits, automatic public covers and failed-repair preservation.');
+}finally{global.fetch=originalFetch;fs.rmSync(dir,{recursive:true,force:true});}})().catch(e=>{console.error(e);process.exitCode=1});

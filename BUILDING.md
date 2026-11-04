@@ -12,3 +12,49 @@ The NSIS installer is written to `dist/nova-launcher-v0.1.1.exe`. Signing is not
 
 Store credentials are never build inputs. Tests use synthetic fixtures and do not log in to an account.
 
+
+
+## Linux AppImage preview (x86_64)
+
+Use Node.js 24 on Linux x86_64:
+
+```sh
+npm ci
+npm --prefix app ci
+npm test
+npm run dist:linux
+```
+
+The artifact is `dist/nova-launcher-v0.1.6-linux-x86_64.AppImage`.
+Make it executable with `chmod +x` before launching. Systems without FUSE can use
+`./nova-launcher-v0.1.6-linux-x86_64.AppImage --appimage-extract-and-run`.
+Windows helper binaries are excluded from Linux packages. This is an experimental
+Linux build: local Windows store discovery, Discord native adapter, Wi-Fi,
+Bluetooth, Steam firewall controls and AnyFSE are not ported. Account credential
+storage needs a supported Linux desktop keyring; plaintext fallback is not enabled.
+Headless startup validates the account gate, not real store sign-in or game launch.
+Apply the artwork credentials database migration before testing key synchronization.
+
+## Personal profile (shared EXE / AppImage implementation)
+
+The Profile navigation item and Settings → Profile and feed use the same renderer
+and main-process handlers on Windows and Linux. Name, bio, PNG avatar/banner,
+profile links, visibility and a bounded activity journal sync in the existing
+owner-scoped Nova profile payload; no additional database migration is required
+for these profile fields. Store login sessions are not part of this payload.
+
+The first library observation establishes a baseline. Subsequent library additions,
+wishlist additions and newly observed unlocked achievements create feed entries.
+Disabled feed categories do not collect new entries; hiding a category filters its
+existing entries. The journal retains up to 200 events and displays the latest 50.
+Profile data is private to the signed-in Nova account, not a public social page.
+
+Reset name/images, clear feed and reset personal profile each require typing RESET.
+These actions preserve the account, store sessions, installed games, library and
+wishlist. Reset cutoffs are merged across devices so old feed entries are not
+reintroduced by a stale device. Previously hidden journal data is not claimed to
+be deleted from backups. Currently playing reflects local process detection:
+Windows uses the existing process provider, Linux reads accessible /proc executable
+paths. Proton/Wine launchers or inaccessible processes may prevent detection.
+
+Validation: `node tests/personal-profile.cjs` (also included in `npm test`).

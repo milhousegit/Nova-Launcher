@@ -13,6 +13,4 @@ L’applicazione Electron è distribuita come codice leggibile in `resources/app
 
 NovaDevices.cs e le classi Nova-WifiConsole.cs / Nova-BluetoothConsole.cs implementano il servizio JSON audio/Wi-Fi/Bluetooth; riferimenti NAudio e Newtonsoft.Json. Il renderer ha contextIsolation e sandbox attivi e non riceve credenziali memorizzate.
 
-Program.cs / Export.csproj e tools/exporter sono l’esportatore storico Playnite, non più usato dall’app. Non è necessario tenere Playnite installato per le funzioni native di Nova.
-
 Non pubblicare data, Backups, sessioni o credenziali con i sorgenti. Per ricreare l’app su una macchina pulita servono anche i normali file di distribuzione Electron presenti accanto a NOVA.exe.

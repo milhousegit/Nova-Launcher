@@ -59,7 +59,7 @@ npm run start
 npm run dist
 ```
 
-The application code is MIT licensed. Third-party components retain their own licenses. Nova is not affiliated with Valve, Discord, SteamGridDB, Hydra, Playnite or the listed stores.
+The application code is MIT licensed. Third-party components retain their own licenses. Nova is not affiliated with Valve, Discord, SteamGridDB, Hydra or the listed stores.
 
 ## Nova Web companion
 

@@ -4,7 +4,7 @@ const renderConsole=render;
 render=function(keep=false){
  const desktop=state.settings.fullscreen===false&&state.settings.novaAccount?.connected;
  document.body.classList.toggle('desktop-mode',!!desktop);
- if(desktop&&!desktopStarted){desktopStarted=true;page='library';lower=-1;}
+ if(desktop&&!desktopStarted){desktopStarted=true;if(page==='home')page='library';lower=-1;}
  if(!desktop)desktopStarted=false;
  if(desktop&&page==='home'){page='library';lower=-1;if(detailGame)returnPage='library';}
  for(const b of document.querySelectorAll('nav [data-page="home"], [data-system="wifi"], [data-system="bluetooth"]'))b.hidden=!!desktop;
