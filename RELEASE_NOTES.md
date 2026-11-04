@@ -1,4 +1,4 @@
-## Nova Launcher 0.1.6
+## Nova Launcher 0.1.7
 
 ### Added
 
@@ -11,8 +11,11 @@
 - Linux x86_64 AppImage packaging and separate Windows/Linux release builds.
 - Persistent project instructions requiring launcher changes to cover both Windows EXE and Linux AppImage.
 
+- Manual tagged-release publishing through GitHub Actions, with English release notes and both operating-system packages.
+
 ### Fixed
 
+- Correct version displayed in launcher settings and updated Windows/Linux download documentation.
 - Selected artwork now retains an online URL for cross-device synchronization and is applied by the web companion.
 - Concurrent artwork and favorite edits merge without overwriting changes to other games.
 - Public Steam cover recovery works without a SteamGridDB key, with web image fallbacks and preservation of previous artwork when recovery fails.
