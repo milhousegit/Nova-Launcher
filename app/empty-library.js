@@ -1,0 +1,4 @@
+'use strict';
+function emptyLibraryMarkup(){return '<div class="library-empty"><p>Nessun gioco trovato</p><span>Collega una libreria per iniziare</span><div>'+row('Steam','connect-steam','store:Steam')+row('Epic Games','empty-epic','store:Epic')+row('GOG','empty-gog','store:GOG')+'</div></div>';}
+const emptyPreviousAct=act;act=async function(action,el){if(action==='empty-epic'){const r=await call('platformLogin',{kind:'epic'});if(r.library)adopt(r.library);return;}if(action==='empty-gog'){showPlatformAccount('gog');return;}return emptyPreviousAct(action,el);};
+const emptyPreviousRender=render;render=function(keep){emptyPreviousRender(keep);if(!state.games.length&&!detailGame&&(page==='home'||page==='library')){document.getElementById('main').innerHTML='<section class="page empty-library-page">'+emptyLibraryMarkup()+'</section>';}};

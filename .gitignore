@@ -12,3 +12,14 @@ tools/ludusavi/ludusavi.exe
 tools/discord/discord_partner_sdk.dll
 dist*/
 *.pdb
+
+/preview-windows/
+/preview-linux/
+
+/preview-reset/
+
+/preview-current/
+
+/preview-steamguard/
+
+/preview-inline/

@@ -11,6 +11,12 @@
 
 Queste istruzioni valgono per tutto il repository e per le nuove sessioni che lo aprono. Mantienile nel controllo versione affinché siano disponibili anche nei nuovi checkout.
 
+## Local previews before publication
+
+- Prepare and test a local preview before proposing a new public release. Do not push a release tag, publish a GitHub release, or deploy the website until the user explicitly approves publication of that prepared version.
+- Use a packaged local launcher preview with Nova's executable identity; do not ask users to evaluate the raw Electron development executable as if it were the installed app.
+- Local testing may use the existing account on this device. Never ship runtime data, credentials, or personal library content in a preview artifact.
+
 ## Release language
 
 - Always write release titles, release notes, changelog entries and release-related user-facing metadata in English, including official releases and prereleases. This is the default for future sessions, regardless of the language used in chat.

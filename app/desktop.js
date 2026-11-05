@@ -2,7 +2,7 @@
 let desktopSearch='',desktopPlatform='all',desktopStarted=false,desktopFavorites=false,desktopPlayable=false;
 const renderConsole=render;
 render=function(keep=false){
- const desktop=state.settings.fullscreen===false&&state.settings.novaAccount?.connected;
+ const desktop=state.settings.fullscreen===false;
  document.body.classList.toggle('desktop-mode',!!desktop);
  if(desktop&&!desktopStarted){desktopStarted=true;if(page==='home')page='library';lower=-1;}
  if(!desktop)desktopStarted=false;

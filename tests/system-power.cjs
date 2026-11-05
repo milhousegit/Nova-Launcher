@@ -1,0 +1,21 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const create=require('../app/system-power.cjs');
+(async()=>{
+ const events=[];let accepted=false;
+ const power=create({platform:'win32',confirm:async()=>{events.push('confirm');return accepted;},beforeShutdown:async()=>events.push('save'),execFile:(file,args,options,cb)=>{events.push({file,args,options});cb(null);}});
+ assert.deepEqual(await power.shutdown(),{cancelled:true});assert.deepEqual(events,['confirm']);
+ events.length=0;accepted=true;
+ const first=power.shutdown('it'),second=power.shutdown('it');assert.equal(first,second);
+ assert.deepEqual(await first,{accepted:true});assert.equal(events[0],'confirm');assert.equal(events[1],'save');
+ assert.equal(events.length,3);assert.match(events[2].file,/System32\\shutdown\.exe$/);assert.deepEqual(events[2].args,['/s','/f','/t','0']);assert.equal(events[2].options.windowsHide,true);
+ let linux;
+ await create({platform:'linux',confirm:async()=>true,execFile:(file,args,_options,cb)=>{linux={file,args};cb(null);}}).shutdown();
+ assert.deepEqual(linux,{file:'systemctl',args:['poweroff']});
+ await assert.rejects(create({platform:'win32',confirm:async()=>true,execFile:(_f,_a,_o,cb)=>cb(Error('fixture'))}).shutdown(),/Shutdown failed/);
+ let ran=false;await assert.rejects(create({platform:'win32',confirm:async()=>true,beforeShutdown:async()=>{throw Error('save failed');},execFile:()=>{ran=true;}}).shutdown(),/save failed/);assert.equal(ran,false);
+ const ui=fs.readFileSync(path.join(__dirname,'../app/ui.js'),'utf8'),source=ui.split('\n').find(line=>line.startsWith('function menu()'));
+ let html='';vm.runInNewContext(source+';menu();',{state:{settings:{fullscreen:false,platform:'win32'}},row:(label,action,icon)=>`<button data-action="${action}" data-icon="${icon}">${label}</button>`,openPanel:(_title,value)=>{html=value;}});
+ assert(!html.includes('data-action="fullscreen"'));assert(html.includes('data-action="quit" data-icon="close"'));assert(html.includes('data-action="shutdown-pc" data-icon="power"'));assert(!html.includes('Modalità console'));assert(html.includes('BigScreen Full Experience'));
+ console.log('PASS: shutdown cancellation, confirmation/save/command ordering, duplicate prevention, platform commands, error handling and distinct profile menu actions. No real shutdown command was executed.');
+})().catch(error=>{console.error(error);process.exitCode=1;});

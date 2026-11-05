@@ -25,9 +25,9 @@ npm test
 npm run dist:linux
 ```
 
-The artifact is `dist/nova-launcher-v0.1.7-linux-x86_64.AppImage`.
+The artifact is `dist/nova-launcher-v0.1.8-linux-x86_64.AppImage`.
 Make it executable with `chmod +x` before launching. Systems without FUSE can use
-`./nova-launcher-v0.1.7-linux-x86_64.AppImage --appimage-extract-and-run`.
+`./nova-launcher-v0.1.8-linux-x86_64.AppImage --appimage-extract-and-run`.
 Windows helper binaries are excluded from Linux packages. This is an experimental
 Linux build: local Windows store discovery, Discord native adapter, Wi-Fi,
 Bluetooth, Steam firewall controls and AnyFSE are not ported. Account credential
@@ -58,3 +58,11 @@ Windows uses the existing process provider, Linux reads accessible /proc executa
 paths. Proton/Wine launchers or inaccessible processes may prevent detection.
 
 Validation: `node tests/personal-profile.cjs` (also included in `npm test`).
+
+## Local preview before publishing
+
+Run `npm run preview` to package and open the current local code with Nova’s executable name and icon. It never publishes anything. Close the installed Nova instance first so its existing single-instance lock does not receive the launch request. Your existing local Nova account is reused.
+
+Use `npm run preview:win` or `npm run preview:linux` to build an unpacked preview without opening it. Preview output is excluded from Git. Windows previews use `Nova Launcher.exe`; Linux previews use `nova-launcher`. Pass `--local-preview` when opening the executable to disable automatic release checks during evaluation. `--bigscreen` explicitly opens the console layout and `--desktop` opens the desktop layout.
+
+Publish a release only after the user approves that prepared version. A preview does not validate platform-specific Xbox/Game Bar registration or Linux native integrations.
