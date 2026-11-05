@@ -1,0 +1,18 @@
+/* Finds an installed game's folder and executable on disk, so nobody has to browse for them.
+   Folders are searched only where the library already keeps games, plus the usual program folders. */
+const fs=require('fs'),path=require('path');
+const normalize=s=>String(s||'').normalize('NFKD').replace(/\p{M}+/gu,'').toLowerCase().replace(/\b(goty|game of the year|definitive|complete|deluxe|remastered|edition|the)\b/g,'').replace(/[^\p{L}\p{N}]+/gu,'');
+const ignored=/(unins|uninstall|setup|installer|redist|vcredist|vc_redist|dxsetup|dotnet|crashhandler|crashreport|crashpad|unitycrash|cefprocess|webhelper|easyanticheat|battleye|benchmark|updater|patcher|launcherhelper|notification_helper|drivers?install|oalinst)/i;
+function create({fsImpl=fs,env=process.env,limit=2500}={}){
+ const dirs=folder=>{try{return fsImpl.readdirSync(folder,{withFileTypes:true}).filter(e=>e.isDirectory()).map(e=>e.name);}catch{return [];}};
+ /* Where games live: the parent of every known install folder, plus standard program folders. */
+ function roots(library,extra=[]){const found=new Set(extra.filter(Boolean));for(const g of library.games||[])for(const c of g.copies||[])if(c.installed&&c.folder){const parent=path.dirname(c.folder);if(parent&&parent!==c.folder&&!/^[a-z]:\\?$/i.test(parent))found.add(parent);}for(const key of ['ProgramFiles','ProgramFiles(x86)','ProgramW6432'])if(env[key])found.add(env[key]);return [...found].filter(r=>{try{return fsImpl.statSync(r).isDirectory();}catch{return false;}});}
+ function folderScore(title,name){const t=normalize(title),n=normalize(name);if(!t||!n)return 0;if(t===n)return 100;if(n.length>=4&&n.includes(t))return 75;if(t.length>=4&&t.includes(n)&&n.length>=5)return 55;return 0;}
+ function findFolder(title,searchRoots){let best=null;for(const root of searchRoots)for(const name of dirs(root)){const score=folderScore(title,name);if(score>=55&&(!best||score>best.score||score===best.score&&name.length<path.basename(best.folder).length))best={folder:path.join(root,name),score};}return best;}
+ function findExecutable(folder,title,depthLimit=3){const queue=[{dir:folder,depth:0}],t=normalize(title);let best=null,seen=0;while(queue.length&&seen<limit){const {dir,depth}=queue.shift();let entries=[];try{entries=fsImpl.readdirSync(dir,{withFileTypes:true});}catch{continue;}for(const entry of entries){seen++;const full=path.join(dir,entry.name);if(entry.isDirectory()){if(depth<depthLimit&&!/^(_?redist|_commonredist|directx|vcredist|dotnet|support|__macosx)$/i.test(entry.name))queue.push({dir:full,depth:depth+1});continue;}if(!/\.exe$/i.test(entry.name)||ignored.test(entry.name))continue;let size=0;try{size=fsImpl.statSync(full).size;}catch{}if(size<150000)continue;const base=normalize(entry.name.replace(/\.exe$/i,''));let score=Math.min(40,Math.log2(size/1e5+1)*4)-depth*8;if(t&&base===t)score+=60;else if(t&&base&&(t.includes(base)&&base.length>=4||base.includes(t)))score+=35;if(/-win64-shipping|shipping$/i.test(entry.name))score-=6;if(!best||score>best.score)best={executable:full,score};}}return best?.executable||'';}
+ /* Returns {folder,executable} or null. A known folder is kept; only the missing parts are searched. */
+ function locate(game,copy,library,extraRoots=[]){let folder=copy.folder&&exists(copy.folder)?copy.folder:'';if(!folder){const hit=findFolder(game.title,roots(library,extraRoots));folder=hit?.folder||'';}if(!folder)return null;const executable=copy.executable&&exists(copy.executable)?copy.executable:findExecutable(folder,game.title);return {folder,executable};}
+ function exists(p){try{return fsImpl.existsSync(p);}catch{return false;}}
+ return {roots,findFolder,findExecutable,locate,normalize};
+}
+module.exports={create,normalize};

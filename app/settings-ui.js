@@ -2,7 +2,7 @@
 const settingGroup=(title,description,body)=>`<section class="settings-section"><div class="settings-section-heading"><h2>${title}</h2>${description?`<p>${description}</p>`:''}</div><div class="settings-section-body">${body}</div></section>`;
 function startupChoices(){const current=state.settings.startupMode||'bigscreen';return `<div class="startup-choices" role="group" aria-label="Modalità all’avvio">${[['bigscreen','BigScreen','fullscreen','Interfaccia console a schermo intero, pronta per il controller.'],['desktop','Modalità desktop','apps','Libreria in finestra, pensata per mouse e tastiera.']].map(([id,title,symbol,description])=>`<button class="startup-choice" data-startup-mode="${id}" aria-pressed="${current===id}"><span class="startup-choice-icon">${icon(symbol)}</span><strong>${title}</strong><span>${description}</span><small>${current===id?icon('check')+' Selezionata':'Seleziona'}</small></button>`).join('')}</div><p class="settings-hint" role="status">La scelta si applica al prossimo avvio su questo dispositivo. Puoi cambiare modalità dal menu del profilo.</p>`;}
 settingsMarkup=function(){
- const account=state.settings,version=window.novaUpdaterState?.current||'0.1.8';
+ const account=state.settings,version=window.novaUpdaterState?.current||'0.1.9';
  const content={
  general:()=>settingGroup('Avvio e lingua','Scegli come accoglierti quando apri Nova.',startupChoices()+'<!--nova-language-->')+settingGroup('Sessione corrente','La modalità di questa sessione non modifica la scelta per il prossimo avvio.',(account.fullscreen!==false?row('Modalità desktop','desktop-mode-toggle','apps'):'')+(account.platform==='win32'?row('BigScreen Full Experience','xbox-mode','apps','Disponibilità e integrazione Windows'):'')),
  appearance:()=>settingGroup('Aspetto','Colori e animazioni, secondo il tuo stile.',row('Colore di accento','accent-color','image','Personalizza selezione e indicatori')+switchRow('Animazioni fluide','motion',!account.reduceMotion,'settings','Dissolvenze, transizioni e focus'))+settingGroup('Comandi e accessibilità','Adatta la navigazione al modo in cui giochi.',switchRow('Suoni di navigazione','sound-toggle',account.uiSounds!==false,'audio','Toni delicati per selezione, conferma e indietro')+keyboardSetting()),
@@ -13,6 +13,27 @@ settingsMarkup=function(){
  about:()=>settingGroup('Nova Launcher','Free & open source.',`<div class="settings-about"><span class="nova-wordmark"><img src="assets/nova-wordmark.png" alt="Nova Launcher"></span><p>Version ${esc(version)}</p>${account.localPreview?'<p class="settings-hint">Anteprima locale · non pubblicata</p>':''}<p>Windows · Linux preview</p><p class="note">La disponibilità delle integrazioni dipende dallo store, dalla piattaforma e dai permessi dell’account.</p></div>`+row('Updates and release notes','update-open','download')+row('Riduci a icona','minimize','down')+row('Chiudi Nova','quit','close')+row('Spegni PC','shutdown-pc','power'))};
  if(!content[settingsTab])settingsTab='general';
  const tabs=[['general','Generali','settings'],['appearance','Aspetto e comandi','image'],['accounts','Account e librerie','library'],['discovery','Esplora e calendario','explore'],['profile','Profilo e feed','users'],['maintenance','Libreria e aggiornamenti','refresh'],['about','Informazioni su Nova','info']];
- return `<section class="page settings-page"><div class="settings-page-heading"><div><span class="settings-eyebrow">NOVA · IL TUO SPAZIO</span><h1>Impostazioni</h1></div><p>Ogni dettaglio, a modo tuo.</p></div><div class="settings-grid"><nav class="settings-menu" aria-label="Categorie impostazioni">${tabs.map(([id,title,symbol])=>`<button class="row-action ${settingsTab===id?'active':''}" data-settings-tab="${id}" aria-current="${settingsTab===id?'page':'false'}">${icon(symbol)}<span>${title}</span></button>`).join('')}</nav><div class="settings-content">${content[settingsTab]()}</div></div></section>`;
+ const platformName=account.platform==='win32'?'Windows':account.platform==='linux'?'Linux':'';
+ return `<section class="page settings-page"><div class="settings-page-heading"><div><span class="settings-eyebrow">NOVA · IL TUO SPAZIO</span><h1>Impostazioni</h1></div><p class="settings-status" aria-label="Nova ${esc(version)}"><b>v${esc(version)}</b>${platformName?`<span>${platformName}</span>`:''}${account.localPreview?'<span>Preview</span>':''}</p></div><div class="settings-grid"><nav class="settings-menu" aria-label="Categorie impostazioni">${tabs.map(([id,title,symbol])=>`<button class="row-action ${settingsTab===id?'active':''}" data-settings-tab="${id}" aria-current="${settingsTab===id?'page':'false'}">${icon(symbol)}<span>${title}</span></button>`).join('')}</nav><div class="settings-content">${content[settingsTab]()}</div></div></section>`;
 };
+/* Switching category swaps only the content column: no page rebuild, no scroll jump, no replayed page transition. */
+function swapSettingsTab(next){
+ const main=document.getElementById('main'),current=main&&main.querySelector('.settings-content');
+ if(!current){settingsTab=next;render();return;}
+ if(next===settingsTab)return;
+ settingsTab=next;
+ const holder=document.createElement('template');holder.innerHTML=settingsMarkup();
+ const fresh=holder.content.querySelector('.settings-content');
+ if(!fresh){render();return;}
+ current.replaceWith(fresh);
+ for(const tab of main.querySelectorAll('[data-settings-tab]')){const on=tab.dataset.settingsTab===next;tab.classList.toggle('active',on);tab.setAttribute('aria-current',on?'page':'false');}
+ main.scrollTop=0;
+ if(fresh.animate&&!state.settings.reduceMotion)fresh.animate([{opacity:0,transform:'translate3d(0,8px,0)'},{opacity:1,transform:'none'}],{duration:200,easing:'cubic-bezier(.16,1,.3,1)'});
+ if(typeof paintFocus==='function')paintFocus();
+}
+document.addEventListener('click',e=>{
+ const tab=e.target.closest&&e.target.closest('[data-settings-tab]');
+ if(!tab||tab.disabled||typeof page==='undefined'||page!=='settings'||detailGame||panels.length)return;
+ e.stopPropagation();swapSettingsTab(tab.dataset.settingsTab);
+},true);
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-startup-mode]');if(!b)return;try{b.disabled=true;await call('settings',{startupMode:b.dataset.startupMode});state.settings.startupMode=b.dataset.startupMode;render(true);toast('Modalità di avvio salvata');}catch(err){b.disabled=false;toast(err.message);}});

@@ -25,9 +25,9 @@ npm test
 npm run dist:linux
 ```
 
-The artifact is `dist/nova-launcher-v0.1.8-linux-x86_64.AppImage`.
+The artifact is `dist/nova-launcher-v0.1.9-linux-x86_64.AppImage`.
 Make it executable with `chmod +x` before launching. Systems without FUSE can use
-`./nova-launcher-v0.1.8-linux-x86_64.AppImage --appimage-extract-and-run`.
+`./nova-launcher-v0.1.9-linux-x86_64.AppImage --appimage-extract-and-run`.
 Windows helper binaries are excluded from Linux packages. This is an experimental
 Linux build: local Windows store discovery, Discord native adapter, Wi-Fi,
 Bluetooth, Steam firewall controls and AnyFSE are not ported. Account credential

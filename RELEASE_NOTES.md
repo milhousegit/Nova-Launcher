@@ -1,43 +1,35 @@
-## Nova Launcher 0.1.8
+## Nova Launcher 0.1.9
 
 Windows EXE and Linux AppImage are built from the same shared code.
 
 ### Added
 
-- Per-device startup preference for BigScreen or Desktop mode, with explicit `--bigscreen` and `--desktop` launch overrides.
-- Seven organized settings categories with consistent spacing and controller-friendly controls.
-- Illustrated profile recap with most-played games, recent games, playtime, unlocked achievements and genre statistics.
-- Steam Family library retrieval through the authenticated Steam Guard session, with exclusions, deduplication and explicit sync status. An API key alone is not enough for Steam Family.
-- Optional account mode: Nova works as a local guest without an account. Sign in from Profile to enable cloud features. Added Sign out in the profile menu and account settings.
-- Opt-in encrypted credential backups for the Steam Web API key, the SteamGridDB key and the Steam Guard QR session. Encryption happens on the device with AES-256-GCM and a key derived from your recovery passphrase using scrypt; the passphrase is never uploaded. Backups are protected by owner-scoped row-level security. Steam session backups contain only the refresh token and SteamID (no passwords, cookies or guard secrets); restoring reconnects to Steam and may require a fresh QR. Other store sessions remain local.
-- Credential storage choice is part of each connection flow: Steam has an opt-in cloud switch below its QR, and SteamGridDB asks for local or cloud storage before opening its form.
-- SteamGridDB: official API documentation link and a saved-key connection check.
-- Compact Steam, Epic and GOG connection actions for empty libraries, platform symbols on store rows, and an "Other accounts" section with Spotify app/account shortcuts (no Spotify session synchronization).
-- Profile menu: removed the redundant fullscreen action, added a close icon for Quit Nova, and added a separate confirmed PC shutdown action. Windows shutdown closes applications forcibly; Linux uses systemd poweroff.
-- The Xbox integration entry is now named BigScreen Full Experience and states explicitly when it depends on AnyFSE.
-- Packaged local preview commands (`npm run preview`, `preview:win`, `preview:linux`) that keep Nova Launcher branding and disable update checks.
+- **Console design layer** for the whole launcher: one radius and surface scale, monospace system labels, tinted controller glyphs (Xbox A/B/X/Y and PlayStation symbols) and a refreshed header, footer, panels, loading states and toast.
+- **Settings redesign**: grouped, numbered sections with uniform rows, icon tiles, consistent toggles with ON/OFF labels and a status chip with the version and platform. Switching category now updates only the content column, with no page rebuild or scroll jump.
+- **Profile menu and game options** redesigned: an account card with grouped Session / Account / System actions, and a game card with cover, store and installed badges and clearly grouped sections.
+- **Automatic game location**: Nova finds an installed game's folder and executable by itself (next to the games already in the library, plus Program Files), skipping uninstallers, redistributables and crash handlers. Choices made by hand always win, and "Find the game", "Change folder" and "Change executable" are available in the game options. Pressing Play on a game without a known executable runs the search first. Windows only.
+- **Launch options** per game, editable in the game options. Steam uses the documented `steam://run/<id>//<options>/` form; Epic does not accept options from outside the client and the panel says so.
+- **SteamGridDB**: the game is matched automatically (Steam id first, then title) when opening Cover, Background or Logo, remembered, and can be changed with "Change game".
+- **Hydra downloads**: finished downloads are read from Hydra's local data, so games downloaded in Hydra are detected even without a configured executable. After connecting a Hydra account Nova opens Hydra if needed and verifies downloads and save locations. While Nova and Hydra are open together, Nova re-checks whenever Hydra's data changes and when Hydra closes. Windows only.
+- **Friend profiles**: automatic suggestions for friends who share a display name on Steam and Discord (accents and case ignored), never merged without confirmation. The merge page now shows statistics, suggestion cards with avatars, merge-all, dismiss and restore, merged profiles and a searchable manual picker.
+- **Discord voice**: a Discord button in the header, after Friends. The panel lists any current call (server, group or private) with its participants, your servers with icons, voice channels with the avatars of who is inside, joining and leaving, and microphone and deafen controls. The same controls appear in Settings → Audio during a call. Friends have a menu with "Call on Discord" (opens the conversation in Discord) and, for Steam friends, the Steam profile. Voice uses the local Discord client and requires the `rpc` permission described below. Windows only.
 
 ### Fixed
 
-- Friends panel keeps the complete roster, including offline friends, and shows separate total and online counts. The header badge counts online people only, with linked Steam/Discord profiles counted once.
-- Steam busy, away, snooze, invisible and missing presence states are normalized; unknown states no longer count as online.
-- Profile history uses real achievement unlock dates and verified platform acquisition dates. Import timestamps are no longer shown as acquisition events.
-- "Recently added" sorting uses verified store acquisition dates only; titles without a date sort last.
-- Historical unlocked achievements are included in the profile recap and refreshed in the background for played games, with bounded concurrency and cached results. Steam Guard sessions can request achievement progress without a separate Web API key.
-- Profile totals use the live visible library, with Steam Family titles counted once and separate Steam personal/family counts. Fixed stale home library counts while panels are open and owned-game API entries missing from local license metadata.
-- Corrected the Steam `family_shared` flag in both import paths.
-- SteamGridDB keys are verified before replacing a saved key, with separate messages for authentication, network and service errors. Legacy automatic key synchronization is disabled.
-- Disconnecting a store removes that source from the visible library while keeping copies from other connected stores. Installed files and saves are preserved.
-- Profile artwork overrides and achievement deduplication are included in recap statistics. Controller confirmation now works with profile form fields and switches.
+- Navigation is smoother: one light transition per view change, no blur in animations, no smooth-scroll lag, cheaper translation of the interface, and a background blur that updates in steps while reading a game page.
+- Arrow keys now leave the search field instead of trapping focus.
+- Steam and Steam Family Sharing are one platform in the library filter, as are Ubisoft Connect and the Xbox/Microsoft Store variants.
+- Game news no longer shows BBCode tags, template placeholders such as `{LINK}`, invisible or replacement characters, decorative separator lines or broken accents. Ordinary bracketed words such as "[Early Access]" are kept.
+- The confirmation toast is white with dark text again, and the animated selection border is unchanged.
 
 ### Notes and limitations
 
-- The server-side table for encrypted credential backups is `nova_credential_backups` with owner-only row-level security. Existing legacy server records are not migrated automatically.
-- Count diagnostics list identified software/demos and personal entries missing from the last Steam API response. No titles are removed to force a numerical match; the difference between Nova's total and the Steam library count still needs verification against real account data.
-- Xbox Game Bar's predefined launcher row has not been extended: no supported public registration interface was found.
-- Recap statistics use available play history and do not represent a yearly report.
+- Discord voice needs the Discord desktop app open and the `rpc`, `rpc.voice.read` and `rpc.voice.write` scopes. Discord grants these to the application owner and to testers added in the developer portal, or to approved applications; other accounts will see an authorization error in the Discord panel. Existing Discord links keep working for friends and presence; press "Enable calls" to grant the voice permission.
+- Calling a friend from Nova opens the conversation in Discord, where the call is started; direct calls from Nova are not available.
+- Hydra download detection, the Hydra monitor, game location and Discord voice read Windows-specific data and are not available on Linux in this release.
+- The Discord adapter (`tools/discord/DiscordAdapter.exe`) is rebuilt from `DiscordAdapter.cs` and the new `DiscordVoice.cs`.
 
 ### Validation
 
-- Automated tests passed on Windows. The Windows build was run locally as a packaged preview.
-- The Linux AppImage is built by the release workflow; it has not been run on a Linux machine, so Linux-specific behavior is not manually verified.
+- All automated tests passed on Windows, including a new end-to-end test of the Discord voice adapter against a simulated Discord client. The voice feature has not been exercised against a real Discord account.
+- The Windows build was run locally as a packaged preview. The Linux AppImage is built by the release workflow; it has not been run on a Linux machine, so Linux-specific behavior is not manually verified.

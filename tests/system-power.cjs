@@ -15,7 +15,7 @@ const create=require('../app/system-power.cjs');
  await assert.rejects(create({platform:'win32',confirm:async()=>true,execFile:(_f,_a,_o,cb)=>cb(Error('fixture'))}).shutdown(),/Shutdown failed/);
  let ran=false;await assert.rejects(create({platform:'win32',confirm:async()=>true,beforeShutdown:async()=>{throw Error('save failed');},execFile:()=>{ran=true;}}).shutdown(),/save failed/);assert.equal(ran,false);
  const ui=fs.readFileSync(path.join(__dirname,'../app/ui.js'),'utf8'),source=ui.split('\n').find(line=>line.startsWith('function menu()'));
- let html='';vm.runInNewContext(source+';menu();',{state:{settings:{fullscreen:false,platform:'win32'}},row:(label,action,icon)=>`<button data-action="${action}" data-icon="${icon}">${label}</button>`,openPanel:(_title,value)=>{html=value;}});
+ let html='';vm.runInNewContext(source+';menu();',{state:{settings:{fullscreen:false,platform:'win32'}},esc:v=>String(v??''),row:(label,action,icon)=>`<button data-action="${action}" data-icon="${icon}">${label}</button>`,openPanel:(_title,value)=>{html=value;}});
  assert(!html.includes('data-action="fullscreen"'));assert(html.includes('data-action="quit" data-icon="close"'));assert(html.includes('data-action="shutdown-pc" data-icon="power"'));assert(!html.includes('Modalità console'));assert(html.includes('BigScreen Full Experience'));
  console.log('PASS: shutdown cancellation, confirmation/save/command ordering, duplicate prevention, platform commands, error handling and distinct profile menu actions. No real shutdown command was executed.');
 })().catch(error=>{console.error(error);process.exitCode=1;});
