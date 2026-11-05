@@ -4,6 +4,12 @@ Production: https://nova-launcher-web-ten.vercel.app
 
 A responsive browser companion for Nova Launcher. Sign in with the same Nova account. Personal data is read from the existing Supabase `nova_profiles` table under owner-scoped RLS.
 
+## Design
+
+- The public home page (`landing.js`, `public/landing.css`) explains what Nova is, its Desktop and BigScreen modes, setup steps, supported stores, Nova Cloud, privacy, downloads for Windows EXE and Linux AppImage, and a FAQ. Download links and the version label update from the latest official GitHub release, with a built-in fallback.
+- The signed-in area (`public/workspace.css`) follows the launcher's Desktop mode: a top bar with Library, Explore, Wishlist and Friends, a game list on the left in Library, and game details opened inline on the right. On phones the tabs move to a bottom bar and the game list is replaced by the grid and filters.
+- All styling is in same-origin stylesheets; the site CSP forbids inline styles and scripts.
+
 ## Included
 
 - Cloud library with search, store filters, favorites, last-played / playtime / acquisition ordering.

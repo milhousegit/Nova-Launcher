@@ -1,0 +1,115 @@
+/* Signed-in Nova Web: modelled on the launcher's Desktop mode (top bar, game list on the left, details on the right). */
+body[data-view=app],body[data-view=login]{background:#171c23}
+body[data-view=app]{font-size:14px}
+
+/* Palette clean-up: replaces the older green accents with the launcher's purple/slate tones. */
+body[data-view=app] .primary,body[data-view=login] .primary{background:#c4a4ff;border-color:#c4a4ff;color:#1b1129}
+body[data-view=app] .primary:hover,body[data-view=login] .primary:hover{background:#d7c1ff}
+body[data-view=app] .button{border-color:#ffffff1a;background:#ffffff0a}
+body[data-view=app] .button:hover{background:#ffffff14}
+body[data-view=app] .count{color:#cdb8ee;background:#c4a4ff1c}
+body[data-view=app] .game-card>small{color:#a99bc0}
+body[data-view=app] .hero-copy .eyebrow{color:#cdb8ee}
+body[data-view=app] .game-meta svg{color:#cdb8ee}
+body[data-view=app] .game-card:hover .cover{box-shadow:0 0 0 2px #c4a4ff,0 14px 30px #0005}
+body[data-view=app] .game-card:focus-visible .cover{box-shadow:0 0 0 2px #fff}
+body[data-view=app] .alert{background:#2a2335;border-color:#c4a4ff33;color:#d8c9ee}
+body[data-view=app] .empty{border-color:#ffffff1a}
+body[data-view=app] .empty>svg{color:#a690c8}
+body[data-view=app] .live-dot{color:#cdb8ee}
+body[data-view=app] .live-dot:before{background:#c4a4ff}
+body[data-view=app] .source-list>span,body[data-view=app] .sync-status{background:#1c232d;border-color:#ffffff12}
+body[data-view=app] .achievement small{color:#cdb8ee}
+body[data-view=app] .search:focus-within{border-color:#c4a4ff;box-shadow:0 0 0 2px #c4a4ff22}
+body[data-view=app] .search,body[data-view=app] .toolbar select{background:#111720;border-color:#ffffff12}
+body[data-view=app] .hero-gradient{background:linear-gradient(90deg,#171c23 0%,#171c23c9 30%,#171c231a 85%),linear-gradient(0deg,#171c2377,transparent 70%)}
+body[data-view=app] .library-hero,body[data-view=app] .discover-hero{border-radius:12px;background:#232a38}
+body[data-view=app] #toast{background:#232a38;border-color:#c4a4ff44;color:#eee7fc}
+dialog{background:#1c232d;border-color:#ffffff18;border-radius:12px}
+
+/* Top bar */
+header.topbar{position:fixed;top:0;left:0;right:0;height:70px;padding:12px 22px;gap:20px;background:#131820;border-bottom:1px solid #ffffff0b;justify-content:flex-start;z-index:8;backdrop-filter:none}
+header.topbar .brand{width:150px;flex:none}
+.top-tabs{display:flex;gap:4px;margin-left:8px}
+.top-tabs button{display:inline-flex;align-items:center;gap:9px;padding:10px 14px;min-height:38px;border-radius:10px;font-size:14px;color:#c2cdd0}
+.top-tabs button svg{width:17px;height:17px}
+.top-tabs button:hover{background:#ffffff0c;color:#fff}
+.top-tabs button.active{background:#f4f6f3;color:#141b1f}
+.tab-count{display:grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#c4a4ff;color:#1b1129;font-size:11px;font-weight:600}
+.top-actions{margin-left:auto;display:flex;align-items:center;gap:14px}
+.top-actions .cloud-state{color:#b9a8d4}
+.top-actions .icon-button{background:#ffffff0a}
+.top-actions .icon-button:hover{background:#ffffff16}
+.profile{display:grid;place-items:center;border-radius:50%;padding:0}
+.profile .avatar{background:#c4a4ff;color:#1b1129;font-weight:600}
+.profile:hover .avatar{box-shadow:0 0 0 3px #c4a4ff44}
+
+/* Game list (Library only) */
+#desktop-library{position:fixed;left:0;top:70px;bottom:0;width:260px;background:#1c232d;border-right:1px solid #ffffff0b;overflow:auto;z-index:5;scrollbar-width:thin;scrollbar-color:#3a4656 transparent}
+.desktop-library-tools{padding:20px 15px 15px;position:sticky;top:0;background:#1c232d;z-index:1}
+.desktop-library-tools h2{font-size:17px;margin-bottom:18px}
+.desktop-library-tools small{font-size:12px;color:#8f9aa8;margin-left:8px}
+.desktop-library-tools input,.desktop-library-tools select{width:100%;min-height:34px;font-size:12px;padding:8px 10px;margin:0 0 8px;border:1px solid #ffffff0a;border-radius:5px;background:#111720;color:#e1e7ed}
+.desktop-library-tools option{background:#1c232d;color:#e1e7ed}
+.desktop-filter-row{display:flex;gap:5px;align-items:center;margin-bottom:8px}
+.desktop-filter-row select{flex:1;min-width:0;margin:0}
+.desktop-filter{width:31px;height:34px;padding:6px;display:grid;place-items:center;border-radius:5px;background:#ffffff08;color:#aeb9c7}
+.desktop-filter svg{width:17px;height:17px}
+.desktop-filter:hover{background:#ffffff14}
+.desktop-filter.active{background:#c4a4ff;color:#141b1f}
+.desktop-filter.active svg{fill:currentColor}
+.desktop-game-list{padding:0 7px 20px}
+.desktop-game-list button{display:flex;align-items:center;gap:10px;width:100%;padding:6px 9px;min-height:37px;border-radius:4px;text-align:left;font-size:12px;color:#bcc7d4;background:transparent}
+.desktop-game-list button:hover{background:#ffffff0a}
+.desktop-game-list button.active{background:#354457;color:#fff}
+.desktop-game-list img{height:28px;width:20px;object-fit:cover;border-radius:2px;flex:none;background:#293139}
+.desktop-game-list span{flex:1;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.desktop-game-list i{color:#c4a4ff;font-size:7px;font-style:normal}
+.list-empty{padding:18px 10px;font-size:12px;color:#8f9aa8}
+
+/* Content area */
+body[data-view=app] main{max-width:none;margin:70px 0 0;padding:28px;min-height:calc(100vh - 70px)}
+body[data-view=app] main.with-library{margin-left:260px}
+body[data-view=app] .section-heading h1{font-size:28px}
+body[data-view=app] .games-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:22px}
+body[data-view=app] .game-card:hover{transform:none}
+body[data-view=app] .library-hero{height:290px}
+.m-only{display:none!important}
+.back-link{display:inline-flex;align-items:center;gap:8px;margin-bottom:16px;color:#c8a9f7;font-size:13px}
+.back-link svg{width:16px;height:16px}
+.game-page .detail-hero{border-radius:12px;min-height:330px}
+.game-page .detail-body{padding:28px 0 20px}
+.game-page .detail-hero .hero-copy{max-width:70%}
+
+/* Sign-in page */
+.signin-story{background:radial-gradient(ellipse at 40% 70%,#6a42964a,transparent 55%),linear-gradient(135deg,#232035,#131820);border-right-color:#ffffff12}
+.signin-story:after{color:#c4a4ff07}
+.signin-story p,.signin-story>small,.signin-form .signin-note{color:#a99bc0}
+.signin-story>small{color:#9a8cb4}
+.signin-points{list-style:none;margin:30px 0 0;padding:0;display:grid;gap:14px;font-size:14px;color:#cfc6dd}
+.signin-points li{display:flex;gap:12px;align-items:center}
+.signin-points svg{color:#c4a4ff;width:18px;height:18px}
+.signin-form input{background:#111720;border-color:#ffffff14;border-radius:8px}
+.signin-form input:focus{border-color:#c4a4ff;outline:none;box-shadow:0 0 0 2px #c4a4ff33}
+.signin-note a,.signin-links a{color:#d0b8f5;text-decoration:underline}
+.signin-links{display:flex;gap:18px;margin-top:18px;font-size:12px}
+.signin-form .form-error{color:#ffb5a8}
+
+@media(max-width:900px){
+ header.topbar{height:64px;padding:10px max(16px,env(safe-area-inset-right)) 10px max(16px,env(safe-area-inset-left));gap:8px}
+ header.topbar .brand{width:108px}
+ .top-tabs{position:fixed;left:0;right:0;bottom:0;margin:0;gap:0;height:calc(68px + env(safe-area-inset-bottom));padding:0 0 env(safe-area-inset-bottom);background:#131820;border-top:1px solid #ffffff12;justify-content:space-around;z-index:9}
+ .top-tabs button{flex:1;min-width:0;min-height:56px;flex-direction:column;justify-content:center;gap:4px;padding:8px 4px;font-size:12px;border-radius:0;position:relative}
+ .top-tabs button svg{width:22px;height:22px}
+ .top-tabs button.active{background:transparent;color:#c4a4ff}
+ .tab-count{position:absolute;top:6px;left:calc(50% + 6px)}
+ #desktop-library{display:none}
+ body[data-view=app] main,body[data-view=app] main.with-library{margin:64px 0 0;padding:20px max(16px,env(safe-area-inset-right)) calc(88px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));min-height:calc(100vh - 64px)}
+ .m-only{display:flex!important}
+ .toolbar>label.m-only select{width:100%}
+ .game-page .detail-hero .hero-copy{max-width:100%}
+ body[data-view=app] .library-hero{height:auto;min-height:250px}
+ .top-actions{gap:4px}
+ .top-actions .button.small{font-size:0;gap:0;width:44px;min-width:44px;height:44px;padding:10px}
+ .top-actions .icon-button{width:44px;height:44px}
+}
