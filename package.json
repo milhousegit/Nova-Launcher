@@ -1,11 +1,11 @@
 {
   "name": "nova-launcher-build",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "private": true,
   "scripts": {
     "start": "electron app",
     "dist": "electron-builder --win nsis --x64 --publish never",
-    "test": "node tests/release.cjs && node tests/localization.cjs && node tests/profile-boot.cjs && node tests/web-sync.cjs && node tests/updates.cjs && node tests/artwork.cjs && node tests/personal-profile.cjs && node tests/profile-history.cjs && node tests/settings-recap.cjs && node tests/ui-flow.cjs && node tests/steamgriddb.cjs && node tests/system-power.cjs && node tests/store-reset.cjs && node tests/credential-crypto.cjs && node tests/steam-session-backup.cjs && node tests/inline-cloud.cjs && node tests/store-disconnect.cjs && node tests/steam-family.cjs && node tests/library-counts.cjs && node tests/friends.cjs && node tests/hydra-friends.cjs && node tests/news-text.cjs && node tests/game-locator.cjs && node tests/discord-voice.cjs && node tests/discord-rpc.cjs",
+    "test": "node tests/release.cjs && node tests/localization.cjs && node tests/profile-boot.cjs && node tests/web-sync.cjs && node tests/updates.cjs && node tests/artwork.cjs && node tests/personal-profile.cjs && node tests/profile-history.cjs && node tests/settings-recap.cjs && node tests/ui-flow.cjs && node tests/steamgriddb.cjs && node tests/system-power.cjs && node tests/store-reset.cjs && node tests/credential-crypto.cjs && node tests/steam-session-backup.cjs && node tests/inline-cloud.cjs && node tests/store-disconnect.cjs && node tests/steam-family.cjs && node tests/library-counts.cjs && node tests/friends.cjs && node tests/hydra-friends.cjs && node tests/news-text.cjs && node tests/game-locator.cjs && node tests/discord-voice.cjs && node tests/discord-rpc.cjs && node tests/hydra-install.cjs && node tests/discord-client.cjs && node tests/discord-handshake.cjs",
     "dist:linux": "electron-builder --linux AppImage --x64 --publish never",
     "preview": "node scripts/local-preview.cjs",
     "preview:win": "electron-builder --dir --win --x64 --publish never --config.directories.output=preview-windows",
@@ -49,6 +49,14 @@
             "**/*",
             "!**/*.pdb"
           ]
+        },
+        {
+          "from": "tools/node_modules",
+          "to": "tools/node_modules",
+          "filter": [
+            "**/*",
+            "!**/*.pdb"
+          ]
         }
       ]
     },
@@ -78,7 +86,23 @@
       "category": "Game",
       "icon": "app/assets/NOVA.png",
       "artifactName": "nova-launcher-v${version}-linux-${arch}.AppImage",
-      "extraFiles": [],
+      "extraFiles": [
+        {
+          "from": "tools",
+          "to": "tools",
+          "filter": [
+            "snapshot.cjs"
+          ]
+        },
+        {
+          "from": "tools/node_modules",
+          "to": "tools/node_modules",
+          "filter": [
+            "**/*",
+            "!**/*.pdb"
+          ]
+        }
+      ],
       "executableName": "nova-launcher",
       "desktop": {
         "entry": {
@@ -86,6 +110,7 @@
           "Comment": "Nova Launcher Linux preview"
         }
       }
-    }
+    },
+    "afterPack": "scripts/verify-hydra-runtime.cjs"
   }
 }

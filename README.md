@@ -6,7 +6,7 @@ A controller-first game launcher for Windows, with a cinematic console interface
 
 ## Download
 
-Download the latest **nova-launcher-v0.1.9.exe** from [Releases](https://github.com/milhousegit/Nova-Launcher/releases). Windows 10/11 x64 is required for the EXE. A Linux x86_64 AppImage preview is also available in the same release; see the release notes for platform limitations. English is the default interface language; Italian is available in Settings → Language.
+Download the latest **nova-launcher-v0.1.10.exe** from [Releases](https://github.com/milhousegit/Nova-Launcher/releases). Windows 10/11 x64 is required for the EXE. A Linux x86_64 AppImage preview is also available in the same release; see the release notes for platform limitations. English is the default interface language; Italian is available in Settings → Language.
 
 This initial release is unsigned. Windows may display a publisher warning. Verify the SHA-256 checksum provided with the release before installing.
 

@@ -4,7 +4,7 @@ const fs=require('fs'),path=require('path'),cp=require('child_process');
 const hydraExecutable=value=>/(^|[\\/])hydra(\.exe)?$/i.test(String(value||''));
 function hydraState(library){const state=new Map();for(const g of library.games||[]){const c=(g.copies||[]).find(c=>c.source==='Hydra');if(c)state.set(g.id,{title:g.title,installed:!!c.installed,folder:c.folder||''});}return state;}
 function compare(before,after){const changes=[];for(const [id,now] of after){const old=before.get(id);if(!old||old.installed!==now.installed||old.folder!==now.folder)changes.push({id,title:now.title,installed:now.installed,added:!old});}for(const [id,old] of before)if(!after.has(id)&&old.installed)changes.push({id,title:old.title,installed:false,removed:true});return changes;}
-function create({appData=process.env.APPDATA,library,refresh,locations,processes,open,changed=()=>{},busy=()=>false,log=()=>{},wait=ms=>new Promise(r=>setTimeout(r,ms)),running}){
+function create({appData=process.env.APPDATA||process.env.XDG_CONFIG_HOME||path.join(require('os').homedir(),'.config'),library,refresh,locations,processes,open,changed=()=>{},busy=()=>false,log=()=>{},wait=ms=>new Promise(r=>setTimeout(r,ms)),running}){
  const db=appData?path.join(appData,'hydralauncher','hydra-db'):'';
  let checking=false,lastSignature='',wasOpen=false,lastRun=0,timer=null,latest=null;
  function signature(){try{return fs.readdirSync(db).map(f=>{const s=fs.statSync(path.join(db,f));return f+':'+s.size+':'+Math.floor(s.mtimeMs);}).sort().join('|');}catch{return '';}}

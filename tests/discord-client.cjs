@@ -1,0 +1,10 @@
+const assert=require('node:assert/strict'),{EventEmitter}=require('node:events'),create=require('../app/discord-client.cjs');
+(async()=>{
+ let active=false,spawned=[],checks=0;
+ const launch=create({platform:'win32',env:{LOCALAPPDATA:'C:/fixture'},exists:p=>p.endsWith('Update.exe'),processes:async()=>{checks++;return active?[{ExecutablePath:'C:/Discord/Discord.exe'}]:[{ExecutablePath:'C:/Nova/DiscordAdapter.exe'}];},spawn:(exe,args,options)=>{spawned.push({exe,args,options});const child=new EventEmitter();child.unref=()=>{};setImmediate(()=>{active=true;child.emit('spawn');});return child;},wait:async()=>{}});
+ const first=launch();assert.equal(first,launch());assert.deepEqual(await first,{opened:true});assert.equal(spawned.length,1);assert(spawned[0].args.includes('--start-minimized'));assert.equal(spawned[0].options.windowsHide,true);assert.equal(spawned[0].options.stdio,'ignore');assert.deepEqual(await launch(),{opened:false});assert.equal(spawned.length,1);
+ const missing=create({platform:'win32',env:{},exists:()=>false,readDir:()=>[],processes:async()=>[]});await assert.rejects(missing(),/Discord non trovato/);
+ const failed=create({platform:'linux',processes:async()=>[],spawn:()=>{const child=new EventEmitter();setImmediate(()=>child.emit('error',Error('not installed')));return child;}});await assert.rejects(failed(),/not installed/);
+ let linuxArgs;const linux=create({platform:'linux',processes:async()=>linuxArgs?[{ExecutablePath:'/usr/bin/discord'}]:[],spawn:(exe,args)=>{linuxArgs=[exe,args];const child=new EventEmitter();child.unref=()=>{};setImmediate(()=>child.emit('spawn'));return child;}});assert.deepEqual(await linux(),{opened:true});assert.deepEqual(linuxArgs,['discord',['--start-minimized']]);
+ console.log('PASS: Discord opens minimized on explicit request, concurrent requests launch once, existing clients are reused, adapter processes are excluded, missing clients fail clearly and Linux startup uses the same background flag.');
+})().catch(e=>{console.error(e);process.exitCode=1;});

@@ -3,7 +3,7 @@
    (server, group or private), joining and leaving, microphone control, and a menu for every friend.
    Voice runs in the Discord adapter through the local Discord client; this file only shows and commands it. */
 (()=>{
- let voice={linked:false,capable:false,ready:false,guilds:[],call:null},opened=new Set(),busy=false,lastSignature='';
+ let voice={linked:false,capable:false,ready:false,guilds:[],call:null},opened=new Set(),busy=false,starting=false,lastSignature='';
  const raw=(action,payload)=>window.nova.call(action,payload);
  const inCall=()=>!!voice.call;
  const panelKind=()=>panels.at(-1)?.kind;
@@ -45,6 +45,7 @@
   return `<div class="discord-guild"><button class="discord-guild-head" data-discord-guild="${esc(guild.id)}" aria-expanded="${open}">${guild.icon?`<img class="discord-guild-icon" src="${esc(guild.icon)}" alt="" draggable="false" loading="lazy">`:`<span class="discord-guild-initial" aria-hidden="true">${initial(guild.name)}</span>`}<span class="discord-guild-name">${esc(guild.name)}</span>${inside?`<span class="call-chip">${inside}</span>`:''}<small>${channels.length}</small><span class="discord-chevron" aria-hidden="true"></span></button>${open?`<div class="discord-channels">${channels.length?channels.map(c=>channelMarkup(c,activeId===c.id)).join(''):'<p class="note">Nessun canale vocale.</p>'}</div>`:''}</div>`;
  }
  function discordMarkup(){
+  if(starting)return skeletonMarkup('rows',3);
   if(!voice.linked)return `<div class="empty"><h3>Discord non collegato</h3><p>Collega Discord per vedere server e canali vocali.</p></div>${row('Discord','connect-discord','store:Discord','Collega il tuo account direttamente a Nova')}`;
   if(!voice.capable)return `<div class="empty"><h3>Chiamate non abilitate</h3><p>Per entrare nei canali vocali Nova ha bisogno dell’accesso vocale di Discord. Ricollega il tuo account per concedere il permesso.</p></div>${row('Abilita le chiamate','discord-reauth','store:Discord','Si apre la finestra di Discord')}`;
   const guilds=voice.guilds||[],listed=guilds.filter(g=>(g.channels||[]).length);
@@ -58,9 +59,11 @@
   clearInterval(watchTimer);
   watchTimer=setInterval(()=>{if(panelKind()!=='discord'){clearInterval(watchTimer);watchTimer=null;return;}for(const id of opened)command({action:'members',guild:id},'',true);refresh();},6000);
  }
- function showDiscord(){
-  openPanel('Discord',discordMarkup,true);panels.at(-1).kind='discord';watchOpenGuilds();
-  refresh().then(()=>{if(voice.capable&&voice.ready&&!(voice.guilds||[]).length)command({action:'guilds'},'',true);});
+ async function showDiscord(){
+  starting=true;openPanel('Discord',discordMarkup,true);panels.at(-1).kind='discord';watchOpenGuilds();
+  try{voice=await raw('discordOpen');}catch(e){toast(clean(e));await refresh();}
+  finally{starting=false;if(panelKind()==='discord')drawPanel();}
+  if(voice.capable&&voice.ready&&!(voice.guilds||[]).length)await command({action:'guilds'},'',true);
  }
 
  /* Friend menu */
@@ -79,7 +82,7 @@
 
  const previousAct=act;
  act=async function(action,el){
-  if(action==='open-discord-voice'){showDiscord();return;}
+  if(action==='open-discord-voice'){await showDiscord();return;}
   if(action==='discord-join'&&el?.dataset.channel){await command({action:'join',channel:el.dataset.channel},'Entrato nel canale vocale');return;}
   if(action==='discord-leave'){await command({action:'leave'},'Chiamata terminata');return;}
   if(action==='discord-mute'){await command({action:'mute',value:!voice.selfMute},voice.selfMute?'Microfono attivo':'Microfono disattivato');return;}

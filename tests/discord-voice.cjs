@@ -13,7 +13,7 @@ var socialPeople=()=>state.discord.friends;
 var openPanel=(title,build,wide)=>{panels.push({title,build,wide});};
 var call=async(a,p)=>{calls.push([a,p]);return true;};
 var deviceMarkup=(kind)=>'<div id="devices"></div>';var confirm=()=>'base';var act=async()=>'base';
-window.nova={call:async(a,p)=>{calls.push([a,p]);if(a==='discordVoice')return window.fixtureVoice;if(a==='discordVoiceCommand'){window.fixtureVoice=Object.assign({},window.fixtureVoice,window.fixtureAfter);return window.fixtureVoice;}return true;}};
+window.nova={call:async(a,p)=>{calls.push([a,p]);if(a==='discordVoice'||a==='discordOpen')return window.fixtureVoice;if(a==='discordVoiceCommand'){window.fixtureVoice=Object.assign({},window.fixtureVoice,window.fixtureAfter);return window.fixtureVoice;}return true;}};
 var anna={id:'111',name:'Anna',avatar:'https://cdn.example/anna.png',mute:true},bruno={id:'112',name:'Bru',avatar:'https://cdn.example/bru.png',mute:false};
 window.fixtureVoice={linked:true,capable:true,ready:true,fresh:true,guildsLoaded:true,guilds:[{id:'1',name:'Squad',icon:'https://cdn.example/icon.png',channels:[{id:'10',name:'General',stage:false,members:[anna,bruno]},{id:'11',name:'Chill',stage:false,members:[]}]},{id:'2',name:'Retro',icon:'',channels:[{id:'20',name:'Arcade',stage:false,members:[]}]}],call:null,selfMute:false,selfDeaf:false};`);
 w.eval(app('discord-voice-ui.js'));
@@ -21,7 +21,7 @@ assert(w.document.getElementById('discord-toggle').innerHTML.includes('store:Dis
 assert(app('index.html').indexOf('id="discord-toggle"')>app('index.html').indexOf('id="friends-toggle"'),'the Discord button comes right after the friends button');
 (async()=>{
  await w.eval("act('open-discord-voice')");
- var panel=w.eval('panels.at(-1)');assert.equal(panel.title,'Discord');assert.equal(panel.wide,true);
+ var panel=w.eval('panels.at(-1)');assert(ev('calls').some(c=>c[0]==='discordOpen'),'Opening the panel starts or reuses the desktop client');assert.equal(panel.title,'Discord');assert.equal(panel.wide,true);
  var html=w.eval('panels.at(-1).build()');
  assert(html.includes('src="https://cdn.example/icon.png"')&&html.includes('Retro')&&html.includes('discord-guild-initial'),'servers show their icon, or an initial without one');
  assert(!html.includes('General'),'channels stay folded until a server is opened');
@@ -73,3 +73,5 @@ assert(app('index.html').indexOf('id="discord-toggle"')>app('index.html').indexO
  console.log('PASS: header Discord button, server icons, channel members with avatars, any call including private ones, joining, microphone control, friend menu and command validation.');
  process.exit(0);
 })().catch(e=>{console.error(e);process.exit(1);});
+
+{const transport=app('main.cjs'),source=fs.readFileSync(path.join(__dirname,'../tools/discord/DiscordVoice.cs'),'utf8');assert(source.includes('pipe.Write(frame,0,frame.Length)'));assert(!source.includes('pipe.Write(head,0,8)'));assert(source.includes('catch{c.Dispose();throw;}'));assert(transport.includes('i<150'));}

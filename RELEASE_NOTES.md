@@ -1,3 +1,19 @@
+## Nova Launcher 0.1.10
+
+### Fixed
+
+- Hydra installation detection now includes the LevelDB runtime in packaged builds. Installed executables and completed downloads are detected locally and retained after cloud synchronization.
+- Opening Discord from Nova starts the desktop client minimized when necessary, waits for connection and reuses an existing client.
+- Discord IPC sends complete frames in a single write and closes failed handshakes instead of accumulating connections. Startup and command deadlines account for client initialization.
+- Shut down PC now saves Nova state and requests system shutdown directly, without a mouse-only confirmation dialog. Windows forcibly closes applications; Quit Nova remains separate.
+- Packaging checks reject missing Hydra runtime dependencies. Linux packages include the database reader and scan the Linux configuration directory using Electron's Node runtime.
+
+### Validation and platform limitations
+
+- Desktop regression tests and native Discord protocol tests pass on Windows. Local Hydra installation scans and real Discord server loading were verified without including personal data in release artifacts.
+- Shutdown commands were mocked in tests; the test suite never shuts down its host.
+- GitHub Actions builds Windows EXE and Linux AppImage from the same commit. Linux native Discord voice, Windows store discovery and Windows device controls remain unavailable; Linux desktop execution has not been verified on the Windows development machine.
+
 ## Nova Launcher 0.1.9
 
 Windows EXE and Linux AppImage are built from the same shared code.
