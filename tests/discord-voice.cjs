@@ -21,7 +21,7 @@ assert(w.document.getElementById('discord-toggle').innerHTML.includes('store:Dis
 assert(app('index.html').indexOf('id="discord-toggle"')>app('index.html').indexOf('id="friends-toggle"'),'the Discord button comes right after the friends button');
 (async()=>{
  await w.eval("act('open-discord-voice')");
- var panel=w.eval('panels.at(-1)');assert(ev('calls').some(c=>c[0]==='discordOpen'),'Opening the panel starts or reuses the desktop client');assert.equal(panel.title,'Discord');assert.equal(panel.wide,true);
+ var panel=w.eval('panels.at(-1)');assert(ev('calls').some(c=>c[0]==='discordOpen'),'Opening the panel starts or reuses the desktop client');assert.equal(panel.title,'Discord');assert(!panel.wide,'every sidebar has the same width');
  var html=w.eval('panels.at(-1).build()');
  assert(html.includes('src="https://cdn.example/icon.png"')&&html.includes('Retro')&&html.includes('discord-guild-initial'),'servers show their icon, or an initial without one');
  assert(!html.includes('General'),'channels stay folded until a server is opened');

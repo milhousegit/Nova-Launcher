@@ -18,6 +18,8 @@ const init=()=>{
   case 'consoleSet':Object.assign(settings.console,p);return settings.console;
   case 'diagnostics':return {boot:{start:0,window:310,interface:640,profile:900,library:2400},memoryMB:284,cpu:0.6,processes:4,pollMs:10000};
   case 'friends':return {status:'not_connected',friends:[]};
+  case 'downloads':return {items:[{id:'steam:1004',gameId:'g4',title:'Echoes of Tide',source:'Steam',cover:games[4].cover,progress:.62,status:'active'},{id:'hydra:9',gameId:'g9',title:'Wild Atlas',source:'Hydra',cover:games[9].cover,progress:.18,status:'paused'}],active:1,progress:.62};
+  case 'discordOpen':case 'discordVoice':case 'discordVoiceCommand':{const person=(id,name,mute)=>({id,name,mute,avatar:svg('#64748b','#1e293b')});return {linked:true,capable:true,ready:true,fresh:true,guildsLoaded:true,selfMute:false,selfDeaf:false,call:{id:'c1',guildId:'s1',name:'Lobby',type:0,members:[person('1','Marta'),person('2','Luca',true),person('3','Giulia')]},guilds:[{id:'s1',name:'Serata giochi',channels:[{id:'c1',name:'Lobby',members:[person('1','Marta'),person('2','Luca',true),person('3','Giulia')]},{id:'c2',name:'Coop',members:[]}]},{id:'s2',name:'Amici di sempre',channels:[{id:'c3',name:'Generale',members:[person('4','Paolo')]}]}]};}
   case 'activity':return {id:p.id};case 'details':return games.find(g=>g.id===p.id);
   default:return [];}}};
  /* A controller whose buttons the test can press. */
@@ -149,6 +151,25 @@ const init=()=>{
  await page.keyboard.press('s');await page.waitForTimeout(300);
  assert.equal(await page.evaluate(()=>document.activeElement.id),'library-search','the new key does');
  await page.keyboard.press('Escape');
+
+ /* 6b. Downloads ring and list, Discord sidebar: same width as every other panel */
+ await page.evaluate(()=>allPanelsClosed());await page.waitForTimeout(200);
+ await page.evaluate(()=>window.novaShell&&document.getElementById('downloads-toggle').click());await page.waitForTimeout(500);
+ assert.equal(await text('#panel-title'),'Downloads');assert.equal(await page.locator('.download-row').count(),2);
+ assert.equal(await page.getAttribute('#downloads-toggle .ring-value','stroke-dasharray'),'62 100','the header ring follows the download');
+ const downloadsWidth=await page.evaluate(()=>document.getElementById('panel').getBoundingClientRect().width);
+ await page.screenshot({path:path.join(out,'11-downloads.png')});
+ await page.keyboard.press('Escape');await page.waitForTimeout(200);
+ await page.waitForTimeout(500);await page.screenshot({path:path.join(out,'13-header.png'),clip:{x:1120,y:10,width:800,height:90}});
+ await page.click('#discord-toggle');await page.waitForTimeout(700);
+ await page.click('[data-discord-guild=s1]');await page.waitForTimeout(400);
+ assert.equal(await page.locator('.call-actions .action').count(),3);
+ assert.equal(await page.evaluate(()=>document.getElementById('panel').getBoundingClientRect().width),downloadsWidth,'Discord uses the same sidebar width');
+ await page.screenshot({path:path.join(out,'12-discord.png')});
+ await page.keyboard.press('Escape');await page.waitForTimeout(200);
+ await page.evaluate(()=>act('shortcuts-open'));await page.waitForTimeout(300);
+ assert.equal(await page.evaluate(()=>document.getElementById('panel').getBoundingClientRect().width),downloadsWidth,'formerly wide panels use it too');
+ await page.keyboard.press('Escape');await page.waitForTimeout(200);
 
  /* 7. Diagnostics */
  await page.keyboard.press('Control+,');await page.waitForTimeout(250);await page.click('[data-settings-tab=console]');await page.waitForTimeout(200);

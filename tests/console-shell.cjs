@@ -169,3 +169,17 @@ const launchPlan=require(path.join(app,'launch-plan.cjs')),launchSession=require
  assert.equal(focus.score(card,box(100,600,200,300),'right'),Infinity);
  console.log('PASS: directional focus picks the nearest aligned element.');
 }
+
+/* ── Downloads: Steam manifests and Hydra entries become one list ── */
+{
+ const files={'/steam/steamapps/libraryfolders.vdf':'"path"\t\t"/games"','/steam/steamapps/appmanifest_10.acf':'"appid" "10"\n"name" "Half Done"\n"BytesToDownload" "2000"\n"BytesDownloaded" "500"','/steam/steamapps/appmanifest_20.acf':'"appid" "20"\n"name" "Finished"\n"BytesToDownload" "2000"\n"BytesDownloaded" "2000"','/games/steamapps/appmanifest_30.acf':'"appid" "30"\n"name" "Idle"\n"BytesToDownload" "0"\n"BytesDownloaded" "0"'};
+ const fsFake={readFileSync:p=>{if(!(p in files))throw Error('missing');return files[p];},readdirSync:d=>Object.keys(files).filter(f=>path.posix.dirname(f)===d).map(f=>path.posix.basename(f))};
+ const downloads=require(path.join(app,'downloads.cjs')).create({fs:fsFake});
+ const library={games:[{id:'g10',steamId:'10',title:'Half Done',cover:'c.png',copies:[]},{id:'h1',title:'Hydra Game',copies:[{id:'hydra:1',source:'Hydra',download:{status:'active',progress:.75,ready:false}}]},{id:'h2',title:'Paused',copies:[{id:'hydra:2',source:'Hydra',download:{status:'paused',progress:.1,ready:false}}]},{id:'h3',title:'Ready',copies:[{id:'hydra:3',source:'Hydra',download:{status:'complete',progress:1,ready:true}}]}]};
+ const result=downloads.list(library,'/steam');
+ assert.deepEqual(result.items.map(d=>d.title+':'+Math.round(d.progress*100)+':'+d.status),['Hydra Game:75:active','Half Done:25:active','Paused:10:paused'],'finished and idle games are left out');
+ assert.deepEqual([result.active,result.progress],[2,.5],'the ring shows the average of active downloads only');
+ assert.deepEqual([result.items[1].gameId,result.items[1].cover],['g10','c.png'],'a download links to its game page');
+ assert.deepEqual(downloads.list({games:[]},'').items,[]);
+ console.log('PASS: downloads are read from Steam manifests and Hydra entries.');
+}

@@ -34,7 +34,7 @@
  function callCard(compact=false){
   if(!inCall())return '';
   const call=voice.call,people=call.members||[];
-  return `<div class="call-card${compact?' compact':''}" role="group" aria-label="Chiamata Discord"><div class="call-card-head"><span class="call-card-icon">${icon('store:Discord')}</span><span class="call-card-copy"><strong>${esc(call.name||'Chiamata Discord')}</strong><small>${esc(callKind(call))} · In chiamata${people.length?` · ${people.length}`:''}</small></span></div>${people.length?`<div class="voice-people">${people.slice(0,compact?6:16).map(m=>`<span class="voice-person">${memberAvatar(m)}<span>${esc(m.name)}</span></span>`).join('')}</div>`:''}<div class="call-actions"><button class="action ${voice.selfMute?'is-off':''}" data-action="discord-mute" aria-pressed="${!!voice.selfMute}">${icon('audio')}${voice.selfMute?'Attiva microfono':'Disattiva microfono'}</button><button class="action ${voice.selfDeaf?'is-off':''}" data-action="discord-deafen" aria-pressed="${!!voice.selfDeaf}">${voice.selfDeaf?'Riattiva audio':'Audio spento'}</button><button class="action danger" data-action="discord-leave">${icon('close')}Esci dalla chiamata</button></div></div>`;
+  return `<div class="call-card${compact?' compact':''}" role="group" aria-label="Chiamata Discord"><div class="call-card-head"><span class="call-card-icon">${icon('store:Discord')}</span><span class="call-card-copy"><strong>${esc(call.name||'Chiamata Discord')}</strong><small>${esc(callKind(call))} · In chiamata${people.length?` · ${people.length}`:''}</small></span></div>${people.length?`<div class="voice-people">${people.slice(0,compact?6:16).map(m=>`<span class="voice-person">${memberAvatar(m)}<span>${esc(m.name)}</span></span>`).join('')}</div>`:''}<div class="call-actions"><button class="action ${voice.selfMute?'is-off':''}" data-action="discord-mute" aria-pressed="${!!voice.selfMute}"><strong>Microfono</strong><small>${voice.selfMute?'Spento':'Acceso'}</small></button><button class="action ${voice.selfDeaf?'is-off':''}" data-action="discord-deafen" aria-pressed="${!!voice.selfDeaf}"><strong>Audio</strong><small>${voice.selfDeaf?'Spento':'Acceso'}</small></button><button class="action" data-action="discord-leave"><strong>Esci</strong><small>Chiudi la chiamata</small></button></div></div>`;
  }
  function channelMarkup(channel,active){
   const members=channel.members||[],shown=members.slice(0,5),extra=members.length-shown.length;
@@ -50,7 +50,7 @@
   if(!voice.capable)return `<div class="empty"><h3>Chiamate non abilitate</h3><p>Per entrare nei canali vocali Nova ha bisogno dell’accesso vocale di Discord. Ricollega il tuo account per concedere il permesso.</p></div>${row('Abilita le chiamate','discord-reauth','store:Discord','Si apre la finestra di Discord')}`;
   const guilds=voice.guilds||[],listed=guilds.filter(g=>(g.channels||[]).length);
   return callCard()
-   +`<div class="identity-heading"><h3>Server e canali vocali</h3><button class="action" data-action="discord-refresh">${icon('refresh')}Aggiorna elenco</button></div>`
+   +`<div class="identity-heading discord-heading"><h3>Server</h3><button class="action square" data-action="discord-refresh" aria-label="Aggiorna elenco">${icon('refresh')}</button></div>`
    +(voice.error?`<p class="note">${esc(voice.error)}</p>`:'')
    +(!voice.guildsLoaded&&!guilds.length?skeletonMarkup('rows',3):listed.length?listed.map(guildMarkup).join(''):voice.guildsLoaded?'<p class="note">Nessun server con canali vocali.</p>':'');
  }
@@ -60,7 +60,7 @@
   watchTimer=setInterval(()=>{if(panelKind()!=='discord'){clearInterval(watchTimer);watchTimer=null;return;}for(const id of opened)command({action:'members',guild:id},'',true);refresh();},6000);
  }
  async function showDiscord(){
-  starting=true;openPanel('Discord',discordMarkup,true);panels.at(-1).kind='discord';watchOpenGuilds();
+  starting=true;openPanel('Discord',discordMarkup);panels.at(-1).kind='discord';watchOpenGuilds();
   try{voice=await raw('discordOpen');}catch(e){toast(clean(e));await refresh();}
   finally{starting=false;if(panelKind()==='discord')drawPanel();}
   if(voice.capable&&voice.ready&&!(voice.guilds||[]).length)await command({action:'guilds'},'',true);

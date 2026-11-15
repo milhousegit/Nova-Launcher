@@ -85,3 +85,44 @@ body.reduce-motion .veil-bar,body.reduce-motion .veil-card{animation:none}
 /* Footer hints stay on one line on a TV; the least important ones drop first on narrow windows */
 #footer .hints{flex-wrap:nowrap;overflow:hidden;white-space:nowrap}
 @media(max-width:1100px){.rail-head small{display:none}}
+
+/* ── Sidebars: one width for every panel, whatever it shows ────────────────── */
+body:not(.desktop-mode) #overlay:not([data-kind=dropdown]):not([data-kind=gallery]):not([data-kind=article]) #panel:not(.filter-dropdown),
+body:not(.desktop-mode) #overlay:not([data-kind=dropdown]):not([data-kind=gallery]):not([data-kind=article]) #panel.wide:not(.filter-dropdown){width:min(620px,calc(100vw - 36px))}
+
+/* ── Downloads: ring in the header, list in the sidebar ────────────────────── */
+.downloads-toggle{display:grid;place-items:center}
+.download-ring{width:30px;height:30px;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.download-ring .ring-track{stroke:#ffffff2e;stroke-width:2}
+.download-ring .ring-value{stroke:var(--ink);stroke-width:2.6;transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dasharray .6s linear}
+.download-ring .ring-arrow{stroke:var(--ink);stroke-width:2;opacity:.55}
+.downloads-toggle.is-active .ring-arrow{opacity:1}
+.download-list{display:grid;gap:10px}
+.download-row{display:grid;grid-template-columns:54px minmax(0,1fr) auto;align-items:center;gap:16px;width:100%;padding:12px 16px 12px 12px;border-radius:var(--r);background:var(--s2);border:1px solid var(--line);text-align:left;color:var(--ink)}
+.download-row:disabled{opacity:1}
+.download-row img,.download-fallback{width:54px;aspect-ratio:2/3;border-radius:8px;object-fit:cover;background:var(--s3);display:grid;place-items:center}
+.download-fallback svg{width:22px;height:22px;stroke:var(--text-2);fill:none;stroke-width:1.8}
+.download-copy{display:grid;gap:7px;min-width:0}
+.download-copy strong{font-size:18px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.download-copy small{display:flex;gap:10px;font-size:14px;color:var(--text-2)}
+.download-copy small span+span::before{content:'·';margin-right:10px}
+.download-bar{display:block;height:4px;border-radius:4px;background:#ffffff1c;overflow:hidden}
+.download-bar i{display:block;height:100%;border-radius:4px;background:var(--ink);transition:width .6s linear}
+.download-percent{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+
+/* ── Discord sidebar: the call first, three equal controls, then the servers ── */
+.call-card{border-color:var(--line-2);background:var(--s2)}
+.call-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.call-actions .action{height:auto;min-height:62px;padding:10px 12px;display:grid;gap:2px;justify-items:start;text-align:left;font-size:15px}
+.call-actions .action strong{font-weight:600}
+.call-actions .action small{font-size:13px;color:var(--text-2)}
+.call-actions .action.is-off{background:#ffffff14;border-color:var(--line-2);color:var(--ink)}
+.call-actions .action.is-off small{color:var(--ink)}
+.discord-heading{margin-top:4px}
+.discord-heading h3{font-family:inherit;font-size:20px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--ink)}
+.discord-heading .action.square{width:44px;height:44px;padding:0}
+#panel .discord-channel.is-active{background:#ffffff12;border-color:var(--line-2);box-shadow:inset 3px 0 0 var(--ink)}
+#panel .discord-channel.is-active svg{stroke:var(--ink);color:var(--ink)}
+#panel .voice-stack{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center}
+#panel .voice-stack .voice-avatar+.voice-avatar{margin-left:-8px;margin-top:0}
+#panel .call-chip{background:#ffffff14;color:var(--ink);border-color:var(--line-2)}

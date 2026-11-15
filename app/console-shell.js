@@ -275,8 +275,41 @@
   'launch-method':()=>{const g=detailGame||selected,current=state.settings.launchMethods?.[activeCopy(g)?.id]||'auto';openPanel('Metodo di avvio',`<p>Nova sceglie da sola la strada più diretta. Cambia solo se un gioco non parte come ti aspetti.</p>${[['auto','Automatico','Eseguibile quando basta, store in background quando serve'],['direct','Diretto','Avvia sempre l’eseguibile del gioco'],['store','Tramite lo store','Lascia avviare il gioco al suo client']].map(([id,title,sub])=>row(title,'',current===id?'check':'play',sub,`data-launch-method="${id}"`)).join('')}<p class="note">Licenze, accesso online e anti-cheat restano gestiti dallo store: se un gioco li richiede, il suo client si apre comunque.</p>`);},
   'resume-game':async()=>{allPanelsClosed();await call('resumeGame');},
   'session-audio':()=>devicePanel('audio'),
-  'diagnostics':diagnostics
+  'diagnostics':diagnostics,
+  'downloads':openDownloads,
+  'open-download':el=>{const g=game(el.dataset.game);if(g){allPanelsClosed();openDetails(g);}}
  };
+ /* ── Downloads: a ring in the header that fills up, and a list behind it ── */
+ let downloadState={items:[],active:0,progress:0},downloadTimer=0;
+ const percent=v=>Math.round(v*100)+'%';
+ function paintDownloads(){
+  const button=$('#downloads-toggle');if(!button)return;
+  const value=downloadState.active?Math.max(2,Math.round(downloadState.progress*100)):0;
+  button.querySelector('.ring-value')?.setAttribute('stroke-dasharray',value+' 100');
+  button.classList.toggle('is-active',downloadState.active>0);
+  const label=downloadState.active?'Download · '+percent(downloadState.progress):'Download';
+  button.setAttribute('aria-label',label);button.title=label;
+ }
+ function downloadsMarkup(){
+  const items=downloadState.items;
+  if(!items.length)return '<div class="empty"><h3>Nessun download in corso</h3><p>I download di Steam e Hydra compaiono qui mentre sono attivi.</p></div>';
+  return '<div class="download-list">'+items.map(d=>`<button class="download-row" data-action="${d.gameId?'open-download':''}" data-game="${esc(d.gameId||'')}" ${d.gameId?'':'disabled'}>${d.cover?`<img src="${esc(d.cover)}" alt="" loading="lazy" draggable="false">`:`<span class="download-fallback">${icon('download')}</span>`}<span class="download-copy"><strong>${esc(d.title)}</strong><small><span>${esc(d.source)}</span><span>${d.status==='paused'?'In pausa':'In download'}</span></small><i class="download-bar"><i style="width:${Math.round(d.progress*100)}%"></i></i></span><b class="download-percent">${percent(d.progress)}</b></button>`).join('')+'</div>';
+ }
+ async function refreshDownloads(){
+  clearTimeout(downloadTimer);
+  const open=panels.at(-1)?.kind==='downloads';
+  if(!gate()&&(!document.hidden||open)){
+   try{
+    const next=await window.nova.call('downloads'),changed=JSON.stringify(next)!==JSON.stringify(downloadState);
+    downloadState=next;paintDownloads();
+    if(changed&&panels.at(-1)?.kind==='downloads'){const body=$('#panel .panel-body'),focus=captureFocus(),top=body?.scrollTop||0;if(body){body.innerHTML=downloadsMarkup();body.scrollTop=top;if(!restoreFocus(focus))focusFirst();}}
+   }catch{}
+  }
+  /* Quick while something is downloading or the list is open, relaxed otherwise. */
+  downloadTimer=setTimeout(refreshDownloads,downloadState.active||panels.at(-1)?.kind==='downloads'?4000:20000);
+ }
+ function openDownloads(){openPanel('Download',downloadsMarkup);panels.at(-1).kind='downloads';refreshDownloads();}
+ downloadTimer=setTimeout(refreshDownloads,3000);
  const baseAct=act;
  act=async function(name,el){
   if(name==='play'){if(!canActivateGameAction(el))return;const g=detailGame||selected;if(g)await playGame(game(g.id)||g);return;}
