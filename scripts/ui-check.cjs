@@ -38,8 +38,8 @@ const init=()=>{
  /* 1. Home */
  assert.equal(await page.locator('#recent-rail .game-card').count(),24,'Home shows a bounded rail, not the whole library');
  assert.equal(await page.locator('#recent-rail .rail-more').count(),1);
- assert.equal(await text('.hero-continue'),'Continue playing');
- assert.equal(await text('#recent-rail .card-continue'),'Continue');
+ assert.equal(await page.locator('.hero-chip,.hero-continue,.card-continue').count(),0,'no status chips on Home');
+ assert.equal(await page.evaluate(()=>getComputedStyle(document.querySelector('.footer-status .nova-wordmark')).display),'none');
  assert.equal(await page.evaluate(()=>document.activeElement.dataset.game),'g0','focus starts on the most recent game');
  assert.equal(await text('.hero [data-action=play]'),'Play');
  const cardWidth=await page.evaluate(()=>document.querySelector('#recent-rail .game-card').getBoundingClientRect().width);
@@ -156,7 +156,7 @@ const init=()=>{
 
  /* 8. Italian still reads correctly */
  await page.evaluate(()=>{localStorage.setItem('nova.language','it');});await page.reload();await page.waitForSelector('#recent-rail .game-card');await page.waitForTimeout(700);
- assert.equal(await text('.hero-continue'),'Continua a giocare');
+ assert.equal(await text('.hero [data-action=play]'),'Gioca');
  await page.screenshot({path:path.join(out,'09-home-it.png')});
 
  /* 9. A smaller TV-safe window keeps the layout usable */

@@ -82,9 +82,7 @@
   if(current!=='running'&&current!=='launching')return html;
   return html.replace(/<\/button>$/,`<span class="card-state" data-state="${current}">${current==='running'?'In esecuzione':'Avvio in corso…'}</span></button>`);
  };
- const homeLimit=24;let recentMemo={games:null,id:''};
- /* The most recently played game, remembered until the library changes. */
- function mostRecentId(){if(recentMemo.games!==state.games){let best=null;for(const g of state.games)if(Date.parse(g.lastPlayed)>0&&(!best||Date.parse(g.lastPlayed)>Date.parse(best.lastPlayed)))best=g;recentMemo={games:state.games,id:best?.id||''};}return recentMemo.id;}
+ const homeLimit=24;
  function homeGames(){
   const live=g=>Number(playState(g).state==='running'||playState(g).state==='launching');
   const list=[...state.games].sort((a,b)=>live(b)-live(a)||(Date.parse(b.lastPlayed)||0)-(Date.parse(a.lastPlayed)||0)||Number(!!b.installed)-Number(!!a.installed)).slice(0,homeLimit);
@@ -97,14 +95,12 @@
  const baseHero=heroMarkup;
  heroMarkup=function(g){
   if(!g)return baseHero(g);
-  const copy=activeCopy(g),recent=mostRecentId()===g.id;
-  const eyebrow=`<div class="hero-eyebrow">${recent?'<span class="hero-continue">Continua a giocare</span>':''}<span class="hero-chip ${copy?.installed?'is-ready':''}">${copy?.installed?'Installato':'Da installare'}</span>${copy?.source?`<span class="hero-chip">${esc(window.novaContent.platformName(copy.source))}</span>`:''}${Date.parse(g.lastPlayed)>0?`<span class="hero-last"><span>Ultima partita</span><b>${esc(date(g.lastPlayed))}</b></span>`:''}</div>`;
-  return `<div class="hero"><div class="hero-copy">${eyebrow}<div class="game-brand">${g.logo?`<img class="game-logo" src="${esc(g.logo)}" alt="${esc(g.title)}">`:`<h1 class="hero-title">${esc(g.title)}</h1>`}</div><div class="hero-meta">${meta(g)}</div><p class="hero-sub">${esc((g.description||'').slice(0,145))}${g.description?.length>145?'…':''}</p><div class="actions">${playButtonMarkup(g)}${button(`${icon('info')}Dettagli`,'details')}<button class="action square" aria-label="Opzioni del gioco" data-action="options">${icon('settings')}</button></div></div></div>`;
+  return `<div class="hero"><div class="hero-copy"><div class="game-brand">${g.logo?`<img class="game-logo" src="${esc(g.logo)}" alt="${esc(g.title)}">`:`<h1 class="hero-title">${esc(g.title)}</h1>`}</div><div class="hero-meta">${meta(g)}</div><p class="hero-sub">${esc((g.description||'').slice(0,145))}${g.description?.length>145?'…':''}</p><div class="actions">${playButtonMarkup(g)}${button(`${icon('info')}Dettagli`,'details')}<button class="action square" aria-label="Opzioni del gioco" data-action="options">${icon('settings')}</button></div></div></div>`;
  };
  renderHome=function(){
   const list=homeGames();
   /* The first games are the ones most likely to be started: only they are worth decoding right away. */
-  const cards=list.map((g,i)=>{let html=cover(g,g.id===selected?.id);if(i<8)html=html.replace(' loading="lazy"',' loading="eager"');if(i===0&&Date.parse(g.lastPlayed)>0)html=html.replace(/<\/button>$/,'<span class="card-continue">Continua</span></button>');return html;}).join('');
+  const cards=list.map((g,i)=>{let html=cover(g,g.id===selected?.id);if(i<8)html=html.replace(' loading="lazy"',' loading="eager"');return html;}).join('');
   return `<section class="home"><div id="hero-slot">${heroMarkup(selected)}</div><div class="recent"><div class="rail-head">${sectionTabs(false)}<small><b>${state.games.length}</b> <span>giochi in libreria</span></small></div><div class="rail" id="recent-rail">${cards}${state.games.length?`<button class="rail-more" data-page="library" aria-label="Tutta la libreria">${icon('library')}<strong>Tutta la libreria</strong><small><b>${state.games.length}</b> <span>giochi</span></small></button>`:''}</div></div></section>`;
  };
  lowerMarkup=function(){return `<section class="lower-page"><div class="lower-heading">${sectionTabs(true)}</div><div id="lower-content">${lower===0?newsMarkup():appsMarkup()}</div></section>`;};

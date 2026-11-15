@@ -155,3 +155,17 @@ const launchPlan=require(path.join(app,'launch-plan.cjs')),launchSession=require
  assert(!/Defender|DisableAntiSpyware|EnableLUA|wuauserv|Winlogon/i.test(main+fs.readFileSync(path.join(app,'console-mode.cjs'),'utf8').replace(/\/\*[\s\S]*?\*\//g,'')),'security features and the Windows shell are never modified');
  console.log('PASS: shell scripts, styles and startup order are wired correctly.');
 }
+
+/* ── Focus: the nearest element in line wins, whatever its size ── */
+{
+ const focus=require(path.join(app,'focus-model.js')),box=(left,top,width,height)=>({left,top,width,height,right:left+width,bottom:top+height});
+ const pick=(from,options,direction)=>{let best='',score=Infinity;for(const [name,rect] of Object.entries(options)){const s=focus.score(from,rect,direction);if(s<score){score=s;best=name;}}return best;};
+ const card=box(400,600,200,300);
+ assert.equal(pick(card,{play:box(100,500,150,60),tabs:box(100,560,300,30),far:box(380,100,240,60)},'up'),'far','up goes to what is above, not to something nearer but off to the side');
+ assert.equal(pick(card,{next:box(620,600,200,300),wide:box(700,100,900,60)},'right'),'next');
+ assert.equal(pick(box(100,100,150,60),{row:box(100,200,1200,80),chip:box(300,170,60,24)},'down'),'row','a wide row under the button beats a small chip beside it');
+ assert.equal(pick(box(100,100,150,60),{a:box(100,200,150,60),b:box(100,300,150,60)},'down'),'a','the nearest of two aligned elements');
+ assert.equal(pick(card,{diag:box(700,200,100,50)},'right'),'diag','a diagonal element is still reachable when nothing is in line');
+ assert.equal(focus.score(card,box(100,600,200,300),'right'),Infinity);
+ console.log('PASS: directional focus picks the nearest aligned element.');
+}
