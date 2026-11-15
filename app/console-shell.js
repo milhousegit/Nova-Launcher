@@ -240,6 +240,7 @@
   return settingGroup('Modalità console','Nova come schermata principale del PC. Ogni opzione si può disattivare in qualsiasi momento.',
     switchRow('Avvia Nova all’accensione','console-autostart',!!c.autostart,'power',c.autostartSupported?'Apre Nova a schermo intero quando accedi al sistema':'Disponibile nella versione installata di Nova',!c.autostartSupported)
    +switchRow('Torna a Nova alla chiusura del gioco','console-return',c.returnToNova!==false,'home','Nova torna in primo piano appena il gioco si chiude')
+   +switchRow('Nova sempre in primo piano','console-priority',c.priority!==false,'fullscreen','Launcher e app restano dietro a Nova; solo i giochi la coprono')
    +switchRow('Avvio rapido dalla Home','console-quickplay',c.quickPlay!==false,'play','Il pulsante di conferma avvia subito il gioco selezionato')
    +switchRow('Silenzia le notifiche di Windows','console-quiet',!!c.quietNotifications,'audio',windows?'Sperimentale · ripristinate quando chiudi Nova':'Disponibile solo su Windows',!c.quietSupported)
    +row('Richiama Nova durante il gioco','console-summon','keyboard',c.summon?esc(c.summon.replace('Control','Ctrl').split('+').join(' + ')):'Disattivata'))
@@ -260,6 +261,7 @@
   'console-autostart':()=>setConsole({autostart:!consoleState().autostart}),
   'console-return':()=>setConsole({returnToNova:consoleState().returnToNova===false}),
   'console-quickplay':()=>setConsole({quickPlay:consoleState().quickPlay===false}),
+  'console-priority':()=>setConsole({priority:consoleState().priority===false}),
   'console-quiet':()=>{if(consoleState().quietNotifications)return setConsole({quietNotifications:false});openPanel('Silenziare le notifiche di Windows?',`<p>Nova disattiva i banner delle notifiche di Windows per il tuo utente mentre è aperta, così non compaiono sopra i giochi.</p><p class="note">L’impostazione precedente viene salvata e ripristinata quando chiudi Nova o disattivi questa opzione. Aggiornamenti di sicurezza, Defender e controllo account non vengono toccati.</p>${row('Conferma e silenzia le notifiche','console-quiet-confirm','check')}${row('Annulla','back-panel','close')}`);},
   'console-quiet-confirm':async()=>{closePanel();await setConsole({quietNotifications:true,confirm:true});},
   'console-summon':()=>openPanel('Richiama Nova durante il gioco',()=>`<p>Una combinazione di tasti che riporta Nova in primo piano mentre giochi, con le opzioni per riprendere o chiudere il gioco.</p><div class="session-card"><span><small>Combinazione attuale</small><strong>${consoleState().summon?esc(consoleState().summon.replace('Control','Ctrl').split('+').join(' + ')):'Disattivata'}</strong></span></div>${row('Cambia combinazione','summon-capture','keyboard')}${row('Ripristina la predefinita','summon-default','refresh')}${row('Disattiva','summon-off','close')}<p class="note">Il richiamo dal controller non è disponibile: a gioco aperto il sistema consegna i pulsanti solo al gioco.</p>`),

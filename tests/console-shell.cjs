@@ -183,3 +183,22 @@ const launchPlan=require(path.join(app,'launch-plan.cjs')),launchSession=require
  assert.deepEqual(downloads.list({games:[]},'').items,[]);
  console.log('PASS: downloads are read from Steam manifests and Hydra entries.');
 }
+
+/* ── Priority: launchers and apps stay behind full-screen Nova, games and requested apps do not ── */
+{
+ const log=[];let full=true,top=false,minimized=false,on=true;
+ const win={isDestroyed:()=>false,isFullScreen:()=>full,isAlwaysOnTop:()=>top,setAlwaysOnTop:v=>{top=v;log.push('top:'+v);},isMinimized:()=>minimized,minimize:()=>{minimized=true;log.push('minimize');}};
+ const mode=consoleMode.create({app:{isPackaged:true},platform:'win32',data:os.tmpdir(),args:[]});
+ const priority=mode.createPriority({window:()=>win,enabled:()=>on});
+ assert.equal(priority.apply(),true,'full-screen Nova stays above other windows');
+ priority.yield();assert.equal(top,false,'something the user opened may cover Nova');
+ priority.apply();assert.equal(top,false,'and keeps that right until Nova is focused again');
+ priority.focused();assert.equal(top,true);
+ priority.gameStarted();assert.deepEqual([top,minimized],[false,true],'a game takes the screen');
+ minimized=false;priority.focused();priority.apply();assert.equal(top,false,'Nova brought back over a running game does not lock the game out');
+ priority.gameEnded();assert.equal(top,true);
+ full=false;priority.apply();assert.equal(top,false,'desktop mode is an ordinary window');
+ full=true;on=false;priority.apply();assert.equal(top,false,'the option can be turned off');
+ log.length=0;priority.gameStarted();assert.deepEqual(log,[],'with the option off Nova is left alone');
+ console.log('PASS: Nova keeps priority over launchers and apps, and yields to games and requested apps.');
+}

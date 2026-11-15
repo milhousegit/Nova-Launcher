@@ -96,6 +96,26 @@ function create({app,platform=process.platform,fs=fsReal,env=process.env,execFil
   else{win.focus();win.moveTop?.();}
   return true;
  }
- return {autostart,quiet,openSettings,focusWindow,settingsPages:Object.keys(settingsPages)};
+
+ /* ── Priority: as the full-screen console, Nova stays above launchers and apps; only games cover it ──
+    Nova is kept on top while it is full screen, except in two cases: a game is on screen, or the user
+    asked Nova to open something else (a store client, Windows settings, a folder). In the second case
+    priority comes back as soon as Nova has the focus again. */
+ function createPriority({window:getWindow,enabled=()=>true}){
+  let game=false,yielded=false;
+  const wanted=()=>{const win=getWindow();return !!win&&!win.isDestroyed()&&enabled()&&win.isFullScreen()&&!game&&!yielded;};
+  function apply(){const win=getWindow();if(!win||win.isDestroyed())return false;const on=wanted();if(win.isAlwaysOnTop()!==on)win.setAlwaysOnTop(on);return on;}
+  return {
+   apply,
+   /* The game takes the screen: Nova steps down and out of the way. */
+   gameStarted(){game=true;const win=getWindow();apply();if(win&&!win.isDestroyed()&&enabled()&&win.isFullScreen()&&!win.isMinimized())win.minimize();},
+   gameEnded(){game=false;apply();},
+   /* Something the user opened on purpose may cover Nova until Nova is focused again. */
+   yield(){yielded=true;apply();},
+   focused(){if(yielded){yielded=false;apply();}},
+   state:()=>({game,yielded,onTop:wanted()})
+  };
+ }
+ return {autostart,quiet,openSettings,focusWindow,createPriority,settingsPages:Object.keys(settingsPages)};
 }
 module.exports={create,validAccelerator,settingsPages};
