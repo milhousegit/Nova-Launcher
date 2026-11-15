@@ -101,7 +101,7 @@
   const list=homeGames();
   /* The first games are the ones most likely to be started: only they are worth decoding right away. */
   const cards=list.map((g,i)=>{let html=cover(g,g.id===selected?.id);if(i<8)html=html.replace(' loading="lazy"',' loading="eager"');return html;}).join('');
-  return `<section class="home"><div id="hero-slot">${heroMarkup(selected)}</div><div class="recent"><div class="rail-head">${sectionTabs(false)}<small><b>${state.games.length}</b> <span>giochi in libreria</span></small></div><div class="rail" id="recent-rail">${cards}${state.games.length?`<button class="rail-more" data-page="library" aria-label="Tutta la libreria">${icon('library')}<strong>Tutta la libreria</strong><small><b>${state.games.length}</b> <span>giochi</span></small></button>`:''}</div></div></section>`;
+  return `<section class="home"><div id="hero-slot">${heroMarkup(selected)}</div><div class="recent"><div class="rail-head"><h2>I tuoi giochi</h2><small><b>${state.games.length}</b> <span>giochi in libreria</span></small></div><div class="rail" id="recent-rail">${cards}${state.games.length?`<button class="rail-more" data-page="library" aria-label="Tutta la libreria">${icon('library')}<strong>Tutta la libreria</strong><small><b>${state.games.length}</b> <span>giochi</span></small></button>`:''}</div></div><button class="down" data-action="lower">${icon('down')} Novità e app</button></section>`;
  };
  lowerMarkup=function(){return `<section class="lower-page"><div class="lower-heading">${sectionTabs(true)}</div><div id="lower-content">${lower===0?newsMarkup():appsMarkup()}</div></section>`;};
  document.addEventListener('click',e=>{const tab=e.target.closest?.('[data-home-tab]');if(tab&&!panels.length)changeLower(Number(tab.dataset.homeTab));});

@@ -44,7 +44,9 @@ const init=()=>{
  assert.equal(await text('.hero [data-action=play]'),'Play');
  const cardWidth=await page.evaluate(()=>document.querySelector('#recent-rail .game-card').getBoundingClientRect().width);
  assert(cardWidth>=200,'covers are large at 1080p: '+cardWidth);
- const hints=await text('#footer .hints');assert(/Play/.test(hints)&&/Search/.test(hints)&&/Sections/.test(hints),'contextual hints: '+hints);
+ const hints=await text('#footer .hints');assert(/Play/.test(hints)&&/Search/.test(hints),'contextual hints: '+hints);
+ assert.equal(await page.locator('.home .home-tabs').count(),0,'News and Apps live below Home, not beside the games');
+ assert.equal(await page.locator('.home .down').count(),1);
  await page.screenshot({path:path.join(out,'01-home.png')});
 
  /* 2. One press starts the game; states follow the session */
@@ -76,12 +78,12 @@ const init=()=>{
  assert.equal(await text('.hero [data-action=play]'),'Play');
 
  /* 3. Sections with Q/E and the controller bumpers */
- await page.keyboard.press('e');await page.waitForTimeout(350);
- assert.equal(await text('.home-tabs .active'),'News');
+ await page.keyboard.press('ArrowDown');await page.waitForTimeout(350);
+ assert.equal(await text('.home-tabs .active'),'News','down from the games opens News below');
  await press(5);await page.waitForTimeout(350);assert.equal(await text('.home-tabs .active'),'Apps');
- await press(5);await page.waitForTimeout(350);assert.equal(await text('.home-tabs .active'),'Games');
  assert.equal(await page.evaluate(()=>document.body.dataset.input),'xbox');
  assert(/LB/.test(await text('.home-tabs'))&&/RB/.test(await text('.home-tabs')),'bumper glyphs follow the device');
+ await press(1);await page.waitForTimeout(350);assert.equal(await page.locator('#recent-rail').count(),1,'Back returns to the games');
 
  /* 4. Controller: A launches from Home, Y searches, X plays from the library, Menu opens options */
  await press(15,80);await page.waitForTimeout(120);
