@@ -18,6 +18,8 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write # needed only to read the draft release that holds the Discord SDK
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,6 +50,17 @@ jobs:
       - name: Prepare Windows runtime tools
         if: runner.os == 'Windows'
         run: node scripts/prepare-tools.cjs
+      # The Discord Social SDK cannot be committed to this public repository, so it is kept as an
+      # asset of the private draft release "discord-sdk" and packed into the installer here.
+      - name: Add Discord Social SDK
+        if: runner.os == 'Windows'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release download discord-sdk --repo "$GITHUB_REPOSITORY" --pattern discord_partner_sdk.dll --dir tools/discord --clobber
+          test -s tools/discord/discord_partner_sdk.dll
       - name: Build Windows EXE
         if: runner.os == 'Windows'
         run: npm run dist
