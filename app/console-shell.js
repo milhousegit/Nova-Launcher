@@ -149,7 +149,7 @@
  function perform(action){
   if(gate()||veilVisible())return;
   switch(action){
-   case 'search':openSearch();break;
+   case 'search':window.novaShell.openSearch();break;
    case 'quick':quickAction();break;
    case 'options':{if(panels.length)break;const before=panels.length;showOptions();if(panels.length===before)menu();break;}
    case 'favorite':{if(panels.length)break;const g=detailGame||focusedGame();if(g){if(!detailGame)selected=g;act('favorite');}break;}

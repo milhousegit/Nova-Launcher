@@ -202,3 +202,33 @@ const launchPlan=require(path.join(app,'launch-plan.cjs')),launchSession=require
  log.length=0;priority.gameStarted();assert.deepEqual(log,[],'with the option off Nova is left alone');
  console.log('PASS: Nova keeps priority over launchers and apps, and yields to games and requested apps.');
 }
+
+/* ── Storage, uninstall routes and system updates ── */
+(async()=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'nova-storage-'));fs.mkdirSync(path.join(dir,'game','data'),{recursive:true});fs.writeFileSync(path.join(dir,'game','a.bin'),Buffer.alloc(3000));fs.writeFileSync(path.join(dir,'game','data','b.bin'),Buffer.alloc(2000));
+ let progress=0;const info=require(path.join(app,'system-info.cjs')).create({platform:'linux'});
+ assert.equal(await info.folderSize(path.join(dir,'game')),5000);
+ const games=[{id:'s',title:'Steam Game',steamId:'10',copies:[{id:'steam:10',source:'Steam',installed:true,folder:path.join(dir,'steam')}]},{id:'l',title:'Local Game',copies:[{id:'local:1',source:'Locale',installed:true,folder:path.join(dir,'game')},{id:'x',source:'Epic',installed:false,folder:'/nowhere'}]}];
+ const first=await info.storage(games,{10:9000},()=>progress++);
+ assert.deepEqual(first.games.map(g=>g.title+':'+g.size),['Steam Game:9000','Local Game:null'],'Steam sizes come from its manifests; the rest is measured afterwards');
+ assert.equal(first.measuring,true);await new Promise(r=>setTimeout(r,150));assert.equal(progress,1);
+ const second=await info.storage(games,{10:9000});assert.equal(second.games.find(g=>g.id==='l').size,5000);assert.equal(second.measuring,false);
+ assert(second.drives.length>=1&&second.drives[0].total>=second.drives[0].free);
+ assert.deepEqual(info.uninstallPlan({steamId:'10'},{source:'Steam'}),{method:'uri',url:'steam://uninstall/10'});
+ assert.equal(info.uninstallPlan({},{source:'Locale'}).method,'forget');assert.equal(info.uninstallPlan({},{source:'GOG'}).method,'client');assert.equal(info.uninstallPlan({},{source:'Amazon'}).method,'none');
+ assert.equal(/rmSync|unlink|rmdir|Remove-Item/.test(fs.readFileSync(path.join(app,'system-info.cjs'),'utf8')),false,'Nova never deletes game files itself');
+ assert.equal((await info.systemUpdates()).supported,false,'system updates are a Windows feature');
+ let searches=0;const windows=require(path.join(app,'system-info.cjs')).create({platform:'win32',ps:async code=>{if(/Update\.Session/.test(code)){searches++;return JSON.stringify({updates:[{title:'2026-11 Cumulative Update',driver:false,size:5e8,downloaded:true},{title:'Display driver 32.1',driver:true,size:8e8}],reboot:true});}return JSON.stringify({DeviceID:'c:',VolumeName:'System',Size:1e12,FreeSpace:4e11});}});
+ const updates=await windows.systemUpdates();
+ assert.deepEqual([updates.system.length,updates.drivers.length,updates.drivers[0].title,updates.rebootRequired],[1,1,'Display driver 32.1',true],'drivers are listed apart from Windows updates');
+ await windows.systemUpdates();assert.equal(searches,1,'the search is cached');await windows.systemUpdates(true);assert.equal(searches,2);
+ assert.deepEqual((await windows.storage([],{})).drives,[{id:'C:',name:'System',total:1e12,free:4e11}]);
+ assert.deepEqual(windows.parseUpdates({updates:{title:'Only one',driver:true}}).drivers.length,1);
+ const failing=require(path.join(app,'system-info.cjs')).create({platform:'win32',ps:async()=>{throw Error('no service');}});assert.equal((await failing.systemUpdates()).error,true);
+ /* priority: focus lost while Nova starts a client is reclaimed; otherwise the user's choice is respected */
+ let top=false;const win={isDestroyed:()=>false,isFullScreen:()=>true,isAlwaysOnTop:()=>top,setAlwaysOnTop:v=>{top=v;},isMinimized:()=>false,minimize(){}};
+ const priority=consoleMode.create({app:{isPackaged:true},platform:'win32',data:os.tmpdir(),args:[]}).createPriority({window:()=>win});
+ priority.apply();priority.guard(5000,1000);assert.equal(priority.blurred(3000),'reclaim');assert.equal(top,true);
+ assert.equal(priority.blurred(7000),'yield');assert.equal(top,false,'Game Bar or the task switcher can take the screen');priority.focused();assert.equal(top,true);
+ console.log('PASS: storage sizes, store-owned uninstall, Windows and driver updates, and focus guard.');
+})().catch(e=>{console.error(e);process.exitCode=1;});

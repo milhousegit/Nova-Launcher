@@ -5,7 +5,7 @@
 const fsReal=require('fs'),path=require('path');
 
 /* Windows settings pages Nova may open on request, so the desktop is only needed when the user asks for it. */
-const settingsPages={home:'ms-settings:',network:'ms-settings:network',bluetooth:'ms-settings:bluetooth',display:'ms-settings:display',sound:'ms-settings:sound',controllers:'ms-settings:devices',update:'ms-settings:windowsupdate',notifications:'ms-settings:notifications',power:'ms-settings:powersleep'};
+const settingsPages={optionalUpdates:'ms-settings:windowsupdate-optionalupdates',home:'ms-settings:',network:'ms-settings:network',bluetooth:'ms-settings:bluetooth',display:'ms-settings:display',sound:'ms-settings:sound',controllers:'ms-settings:devices',update:'ms-settings:windowsupdate',notifications:'ms-settings:notifications',power:'ms-settings:powersleep'};
 
 /* Accelerators Nova accepts for the global "bring Nova back" shortcut: at least one modifier, one plain key. */
 function validAccelerator(value){
@@ -102,7 +102,7 @@ function create({app,platform=process.platform,fs=fsReal,env=process.env,execFil
     asked Nova to open something else (a store client, Windows settings, a folder). In the second case
     priority comes back as soon as Nova has the focus again. */
  function createPriority({window:getWindow,enabled=()=>true}){
-  let game=false,yielded=false;
+  let game=false,yielded=false,guardUntil=0;
   const wanted=()=>{const win=getWindow();return !!win&&!win.isDestroyed()&&enabled()&&win.isFullScreen()&&!game&&!yielded;};
   function apply(){const win=getWindow();if(!win||win.isDestroyed())return false;const on=wanted();if(win.isAlwaysOnTop()!==on)win.setAlwaysOnTop(on);return on;}
   return {
@@ -113,6 +113,10 @@ function create({app,platform=process.platform,fs=fsReal,env=process.env,execFil
    /* Something the user opened on purpose may cover Nova until Nova is focused again. */
    yield(){yielded=true;apply();},
    focused(){if(yielded){yielded=false;apply();}},
+   /* While Nova starts a client or a game on its own, a window that takes the focus is pushed back.
+      Outside that moment, losing the focus means the user chose another window (Game Bar, task switcher). */
+   guard(ms,now=Date.now()){guardUntil=Math.max(guardUntil,now+ms);},
+   blurred(now=Date.now()){if(game||!enabled())return 'ignore';if(now<guardUntil)return 'reclaim';yielded=true;apply();return 'yield';},
    state:()=>({game,yielded,onTop:wanted()})
   };
  }

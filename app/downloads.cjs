@@ -25,6 +25,8 @@ function create({fs=fsReal}={}){
   }
   return rows;
  }
+ /* What Steam itself reports as the installed size of each game. */
+ function steamSizes(steamPath){const out={};for(const folder of steamFolders(steamPath)){let files=[];try{files=fs.readdirSync(folder).filter(f=>/^appmanifest_\d+\.acf$/.test(f));}catch{continue;}for(const file of files){try{const text=fs.readFileSync(path.join(folder,file),'utf8'),id=field(text,'appid'),size=Number(field(text,'SizeOnDisk'));if(id&&size>0)out[id]=size;}catch{}}}return out;}
  function hydra(library){
   const rows=[];
   for(const game of library?.games||[])for(const copy of game.copies||[]){
@@ -45,6 +47,6 @@ function create({fs=fsReal}={}){
   const active=rows.filter(r=>r.status==='active');
   return {items:rows.sort((a,b)=>b.progress-a.progress),active:active.length,progress:active.length?active.reduce((n,r)=>n+r.progress,0)/active.length:0};
  }
- return {steam,hydra,list,steamFolders};
+ return {steam,hydra,list,steamFolders,steamSizes};
 }
 module.exports={create};

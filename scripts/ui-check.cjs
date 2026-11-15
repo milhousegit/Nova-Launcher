@@ -18,6 +18,9 @@ const init=()=>{
   case 'consoleSet':Object.assign(settings.console,p);return settings.console;
   case 'diagnostics':return {boot:{start:0,window:310,interface:640,profile:900,library:2400},memoryMB:284,cpu:0.6,processes:4,pollMs:10000};
   case 'friends':return {status:'not_connected',friends:[]};
+  case 'collectionsSave':settings.collections=p.collections;return p.collections;
+  case 'storage':return {drives:[{id:'C:',name:'System',total:1e12,free:3.2e11},{id:'D:',name:'Games',total:2e12,free:1.4e12}],measuring:false,games:games.filter(g=>g.installed).slice(0,9).map((g,i)=>({id:g.id,title:g.title,cover:g.cover,source:g.sources[0],drive:i%2?'D:':'C:',size:(90-i*9)*1e9}))};
+  case 'systemUpdates':return {supported:true,rebootRequired:false,system:[{title:'2026-11 Cumulative Update for Windows 11 (KB5070000)',size:6.2e8,downloaded:true}],drivers:[{title:'AMD - Display - 32.0.21025.1',size:8.4e8},{title:'Realtek - Net - 10.72.524.2024',size:1.2e7}]};
   case 'downloads':return {items:[{id:'steam:1004',gameId:'g4',title:'Echoes of Tide',source:'Steam',cover:games[4].cover,progress:.62,status:'active'},{id:'hydra:9',gameId:'g9',title:'Wild Atlas',source:'Hydra',cover:games[9].cover,progress:.18,status:'paused'}],active:1,progress:.62};
   case 'discordOpen':case 'discordVoice':case 'discordVoiceCommand':{const person=(id,name,mute)=>({id,name,mute,avatar:svg('#64748b','#1e293b')});return {linked:true,capable:true,ready:true,fresh:true,guildsLoaded:true,selfMute:false,selfDeaf:false,call:{id:'c1',guildId:'s1',name:'Lobby',type:0,members:[person('1','Marta'),person('2','Luca',true),person('3','Giulia')]},guilds:[{id:'s1',name:'Serata giochi',channels:[{id:'c1',name:'Lobby',members:[person('1','Marta'),person('2','Luca',true),person('3','Giulia')]},{id:'c2',name:'Coop',members:[]}]},{id:'s2',name:'Amici di sempre',channels:[{id:'c3',name:'Generale',members:[person('4','Paolo')]}]}]};}
   case 'activity':return {id:p.id};case 'details':return games.find(g=>g.id===p.id);
@@ -170,6 +173,25 @@ const init=()=>{
  await page.evaluate(()=>act('shortcuts-open'));await page.waitForTimeout(300);
  assert.equal(await page.evaluate(()=>document.getElementById('panel').getBoundingClientRect().width),downloadsWidth,'formerly wide panels use it too');
  await page.keyboard.press('Escape');await page.waitForTimeout(200);
+
+ /* 6c. Collections, storage, system updates */
+ await page.evaluate(()=>{allPanelsClosed();go('library');});await page.waitForTimeout(300);await page.click('[data-library-view=collections]');await page.waitForTimeout(400);
+ assert.equal(await page.evaluate(()=>[...document.querySelectorAll('.collection h2')].map(h=>h.textContent).join('|')),'Recently played|Installed|Never played');
+ assert(await page.evaluate(()=>document.activeElement.matches('.collection-rail .game-card')),'focus lands on the first collection');
+ await page.click('[data-action=collection-new]');await page.waitForTimeout(200);await page.fill('#collection-name','Couch co-op');await page.click('[data-action=collection-name-save]');await page.waitForTimeout(300);
+ assert.equal(await page.locator('[data-collection-edit]').count(),1);
+ await page.evaluate(()=>{document.querySelector('.collection-rail .game-card').focus();});await press(9);await page.waitForTimeout(250);
+ await page.click('#panel [data-action=game-collections]');await page.waitForTimeout(200);await page.click('#panel [data-collection-toggle]');await page.waitForTimeout(300);
+ await page.evaluate(()=>allPanelsClosed());await page.waitForTimeout(200);
+ assert.equal(await page.locator('.collection[data-collection^=c] .game-card').count(),1,'a game added from its options shows in the collection');
+ await page.screenshot({path:path.join(out,'14-collections.png')});
+ await page.evaluate(()=>act('storage'));await page.waitForTimeout(500);
+ assert.equal(await page.locator('.drive').count(),2);assert.equal(await page.locator('.storage-row').count(),9);
+ await page.screenshot({path:path.join(out,'15-storage.png')});
+ await page.evaluate(()=>{allPanelsClosed();act('system-updates');});await page.waitForTimeout(500);
+ assert.equal(await page.locator('.update-row').count(),3);
+ await page.screenshot({path:path.join(out,'16-updates.png')});
+ await page.evaluate(()=>allPanelsClosed());await page.waitForTimeout(200);
 
  /* 7. Diagnostics */
  await page.keyboard.press('Control+,');await page.waitForTimeout(250);await page.click('[data-settings-tab=console]');await page.waitForTimeout(200);
