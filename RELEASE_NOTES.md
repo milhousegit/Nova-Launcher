@@ -1,4 +1,4 @@
-## Unreleased — console experience (prepared, not published)
+## Nova Launcher 0.1.11
 
 ### Added
 
@@ -9,6 +9,7 @@
 - **Controller-first Home**: larger covers, a clear selection, Continue playing, a bounded rail with a shortcut to the whole library, Games / News / Apps sections on LB/RB, and state badges on cards.
 - **Controls**: A starts the selected game on Home, X is the quick action, Y searches, Menu opens options, View opens the controls guide. Keyboard equivalents exist for every action, all of them can be reassigned for keyboard and controller, and the hints at the bottom follow the focused element and the device in use.
 - **Performance diagnostics**: start-up timings, memory, CPU and the current game-check interval.
+- **In-place updates**: installing an update from Settings now replaces the installed version in the same folder and reopens Nova. Windows runs the verified installer silently; Linux replaces the running AppImage file. Shortcuts, the login item and tools that start Nova by path (such as AnyFSE) keep working without changes. If the in-place route fails, the installer opens as before.
 
 ### Changed
 
@@ -19,7 +20,8 @@
 ### Validation and platform limitations
 
 - Automated tests cover the launch plan, session states, console-mode switches, registry parsing and merging, manual games and shortcuts. The real interface was driven in Chromium with a synthetic library, keyboard and a simulated controller (`node scripts/ui-check.cjs`).
-- Not yet run on Windows or in a packaged build: login-item registration, notification silencing, the global shortcut, focus return after a real game, Steam `-silent` start, and registry detection against real GOG / Ubisoft installs. Not yet run in a Linux AppImage: the autostart entry and real game launches.
+- Not yet run on Windows or in a packaged build: the silent in-place update, login-item registration, notification silencing, the global shortcut, focus return after a real game, Steam `-silent` start, and registry detection against real GOG / Ubisoft installs. Not yet run in a Linux AppImage: the in-place AppImage replacement, the autostart entry and real game launches.
+- Updating from 0.1.10 to this version still opens the installer by hand, because the silent route ships with this version. To go back, install the 0.1.10 EXE or AppImage from the Releases page.
 - Linux has no notification silencing and no system-settings pages; games started through Proton or Wine may not be recognised as running.
 - A controller cannot bring Nova back while a game has focus; EA app, Battle.net and Xbox/Game Pass installs are not detected automatically and can be added by hand. Nova does not replace the Windows shell: the desktop is visible briefly at sign-in before Nova opens.
 

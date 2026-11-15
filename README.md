@@ -6,7 +6,7 @@ A controller-first game launcher for Windows, with a cinematic console interface
 
 ## Download
 
-Download the latest **nova-launcher-v0.1.10.exe** from [Releases](https://github.com/milhousegit/Nova-Launcher/releases). Windows 10/11 x64 is required for the EXE. A Linux x86_64 AppImage preview is also available in the same release; see the release notes for platform limitations. English is the default interface language; Italian is available in Settings → Language.
+Download the latest **nova-launcher-v0.1.11.exe** from [Releases](https://github.com/milhousegit/Nova-Launcher/releases). Windows 10/11 x64 is required for the EXE. A Linux x86_64 AppImage preview is also available in the same release; see the release notes for platform limitations. English is the default interface language; Italian is available in Settings → Language.
 
 This initial release is unsigned. Windows may display a publisher warning. Verify the SHA-256 checksum provided with the release before installing.
 
@@ -14,11 +14,11 @@ Visit [Nova Web](https://novalaunchergame.vercel.app) for the animated product h
 
 ## Features
 
-- Automatic stable-release checks, verified installer downloads and release notes in Settings. Installation is initiated by the user.
+- Automatic stable-release checks, verified installer downloads and release notes in Settings. Installation is initiated by the user and replaces the installed version in place.
 - Purple default accent, extended Nova wordmark and matching application/favicon/fallback artwork.
 - Private web friends list relayed from Nova on Windows; presence older than 90 seconds is marked as last activity.
 - Console and desktop layouts, gamepad navigation, persistent focus, and on-screen keyboard options.
-- Console mode (unreleased): start with the system, one-press launch with Starting/Running states, automatic return to Nova when a game closes, configurable keyboard and controller shortcuts, and a global shortcut to bring Nova back over a game.
+- Console mode: start with the system, one-press launch with Starting/Running states, automatic return to Nova when a game closes, configurable keyboard and controller shortcuts, and a global shortcut to bring Nova back over a game.
 - Unified installed games and connected store libraries, source selection, favorites and search.
 - Steam Guard QR sign-in with an encrypted local session, automatic session reuse and token renewal.
 - Steam friends and achievements, merged Steam/Discord friend identities, and Hydra progress where supported.
