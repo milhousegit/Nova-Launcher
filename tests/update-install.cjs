@@ -13,7 +13,7 @@ const create=require('../app/update-install.cjs');
  fs.writeFileSync(current,'old');fs.writeFileSync(next,'new');spawned.length=0;
  assert.equal(await create({...base,platform:'linux',env:{APPIMAGE:current},spawn,relaunchArgs:['--bigscreen']})(next),'replaced');
  assert.equal(fs.readFileSync(current,'utf8'),'new');assert.equal(fs.existsSync(next),false);assert.equal(fs.existsSync(current+'.update'),false);
- assert(fs.statSync(current).mode&0o100,'the replaced AppImage is executable');assert.deepEqual(spawned[0],[current,['--bigscreen']]);
+ /* Windows has no executable bit */if(process.platform!=='win32')assert(fs.statSync(current).mode&0o100,'the replaced AppImage is executable');assert.deepEqual(spawned[0],[current,['--bigscreen']]);
  /* Linux without a writable AppImage, or not running from one: the download is opened as before */
  fs.writeFileSync(next,'newer');opened=[];
  assert.equal(await create({...base,platform:'linux',env:{APPIMAGE:path.join(dir,'missing','Nova.AppImage')},spawn})(next),'manual');
