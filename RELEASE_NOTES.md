@@ -1,3 +1,28 @@
+## Nova Launcher 0.1.12
+
+### Added
+
+- **Library collections**: Recently played, Favourites, Installed and Never played as rows, plus your own collections (create, rename, delete, add a game from its options). The full grid with filters is one press away and search always uses it. Collections are stored on this device.
+- **Downloads**: a header button before Wi-Fi shows a ring that fills with the progress of active Steam and Hydra downloads and opens the list.
+- **Storage**: free space per drive and the size of every installed game. Uninstalling is handed to the store that owns the game; Nova never deletes game files.
+- **System updates** (Windows): pending Windows Update items and drivers, listed separately, with a restart notice and shortcuts to Windows Update and optional updates. Installation stays in Windows Settings.
+- **Window priority**: as the full-screen console, Nova stays above store clients and apps. It steps aside when a game is on screen, and yields to anything the user opens from Nova or switches to (Game Bar, task switcher) until Nova is focused again. Clients and Discord started by Nova open in the background. The option is in Settings → Console and controls.
+
+### Changed
+
+- Directional focus picks the nearest element in line, measured between edges, instead of comparing centres.
+- The play button, controller glyphs and state badges use one neutral colour. The Home hero shows the title, playtime, achievements, description and actions only; the status chips and the Continue badge are gone.
+- News and Apps are below the games on Home again. The header shows the Nova symbol only and the footer wordmark is removed.
+- Every sidebar has the same width. The Discord sidebar shows the current call first, with three equal controls, then the servers.
+- Game options open from cards inside a collection row.
+
+### Validation and platform limitations
+
+- Automated tests cover directional focus, downloads, storage sizes, uninstall routes, the Windows Update parser, window priority and the focus guard. The real interface was driven in Chromium with a synthetic library, keyboard and a simulated controller (`node scripts/ui-check.cjs`).
+- Not yet run on Windows or in a packaged build: window priority and background client start (including Hydra's `--hidden`), the Windows Update and driver search, drive sizes and Steam download progress. This is also the first version that 0.1.11 installs in place, silently; that route has not been run on Windows either.
+- Nova cannot register itself as the home app of the Xbox full screen experience: Windows offers no public registration for unpackaged apps, so a helper such as AnyFSE is still needed. Inside that experience, Game Bar remains the in-game overlay; Nova does not ship its own.
+- Epic, GOG and Ubisoft downloads are not shown; Steam downloads do not distinguish paused from active. Linux has no system-updates page.
+
 ## Nova Launcher 0.1.11
 
 ### Added
@@ -6,13 +31,7 @@
 - **Launch sessions**: every game moves through Play → Starting → Running, with errors and time-outs reported. A store client opening is not counted as the game running; a second press cannot start the game twice; the exit is detected by the main process, so Nova returns even while hidden behind a fullscreen game.
 - **Smart launch**: the game executable is used when the copy is not tied to a store client; Steam is started with `-silent -applaunch` when it is not running and through its protocol when it is; Epic keeps its silent protocol. A per-game launch method (Automatic, Direct, Through the store) is available in the game options. No licence, sign-in or anti-cheat check is bypassed.
 - **Detection**: installed GOG and Ubisoft Connect games are read from the Windows registry and merged with account libraries without duplicates. Any installed game can be added by choosing its executable, and removed again.
-- **Controller-first Home**: larger covers, a clear selection, a bounded rail with a shortcut to the whole library, News and Apps below the games, and a state badge on running games. The header shows the Nova symbol only.
-- **Library collections**: Recently played, Favourites, Installed and Never played as rows, plus your own collections (create, rename, delete, add a game from its options). The full grid with filters is one press away and search always uses it. Collections are stored on this device.
-- **Downloads**: a header button before Wi-Fi shows a ring that fills with the progress of active Steam and Hydra downloads and opens the list.
-- **Storage**: free space per drive and the size of every installed game. Uninstalling is handed to the store that owns the game; Nova never deletes game files.
-- **System updates** (Windows): pending Windows Update items and drivers, listed separately, with a restart notice and shortcuts to Windows Update and optional updates. Installation stays in Windows Settings.
-- **Window priority**: as the full-screen console, Nova stays above store clients and apps. It steps aside when a game is on screen, and yields to anything the user opens from Nova or switches to (Game Bar, task switcher) until Nova is focused again. Clients and Discord started by Nova open in the background.
-- **Navigation and look**: directional focus picks the nearest element in line by edge distance; buttons, controller glyphs and badges use one neutral colour; every sidebar has the same width; the Discord sidebar shows the call first, then the servers.
+- **Controller-first Home**: larger covers, a clear selection, Continue playing, a bounded rail with a shortcut to the whole library, Games / News / Apps sections on LB/RB, and state badges on cards.
 - **Controls**: A starts the selected game on Home, X is the quick action, Y searches, Menu opens options, View opens the controls guide. Keyboard equivalents exist for every action, all of them can be reassigned for keyboard and controller, and the hints at the bottom follow the focused element and the device in use.
 - **Performance diagnostics**: start-up timings, memory, CPU and the current game-check interval.
 - **In-place updates**: installing an update from Settings now replaces the installed version in the same folder and reopens Nova. Windows runs the verified installer silently; Linux replaces the running AppImage file. Shortcuts, the login item and tools that start Nova by path (such as AnyFSE) keep working without changes. If the in-place route fails, the installer opens as before.
@@ -26,11 +45,9 @@
 ### Validation and platform limitations
 
 - Automated tests cover the launch plan, session states, console-mode switches, registry parsing and merging, manual games and shortcuts. The real interface was driven in Chromium with a synthetic library, keyboard and a simulated controller (`node scripts/ui-check.cjs`).
-- Not yet run on Windows or in a packaged build: window priority and background client start (including Hydra's `--hidden`), the Windows Update and driver search, drive sizes, Steam download progress, the silent in-place update, login-item registration, notification silencing, the global shortcut, focus return after a real game, Steam `-silent` start, and registry detection against real GOG / Ubisoft installs. Not yet run in a Linux AppImage: the in-place AppImage replacement, the autostart entry and real game launches.
+- Not yet run on Windows or in a packaged build: the silent in-place update, login-item registration, notification silencing, the global shortcut, focus return after a real game, Steam `-silent` start, and registry detection against real GOG / Ubisoft installs. Not yet run in a Linux AppImage: the in-place AppImage replacement, the autostart entry and real game launches.
 - Updating from 0.1.10 to this version still opens the installer by hand, because the silent route ships with this version. To go back, install the 0.1.10 EXE or AppImage from the Releases page.
 - Linux has no notification silencing and no system-settings pages; games started through Proton or Wine may not be recognised as running.
-- Nova cannot register itself as the home app of the Xbox full screen experience: Windows offers no public registration for unpackaged apps, so a helper such as AnyFSE is still needed. Inside that experience, Game Bar remains the in-game overlay; Nova does not ship its own.
-- Epic, GOG and Ubisoft downloads are not shown; Steam downloads do not distinguish paused from active.
 - A controller cannot bring Nova back while a game has focus; EA app, Battle.net and Xbox/Game Pass installs are not detected automatically and can be added by hand. Nova does not replace the Windows shell: the desktop is visible briefly at sign-in before Nova opens.
 
 ## Nova Launcher 0.1.10
