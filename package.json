@@ -72,7 +72,8 @@
         "it_IT"
       ],
       "installerIcon": "app/assets/NOVA.ico",
-      "uninstallerIcon": "app/assets/NOVA.ico"
+      "uninstallerIcon": "app/assets/NOVA.ico",
+      "include": "build/installer.nsh"
     },
     "linux": {
       "target": [
