@@ -20,7 +20,9 @@ fs.rmSync(base,{recursive:true,force:true});
 
 // Wiring: main applies the user's choices over detected values, and launch options reach Steam and the executable.
 var main=fs.readFileSync(path.join(__dirname,'../app/main.cjs'),'utf8');
-assert(main.includes("steam://run/'+g.steamId+'//'+encodeURIComponent(copy.arguments)"),'Steam launch options use the documented steam://run form');
+var steamPlan=require('../app/launch-plan.cjs').plan({game:{steamId:'620'},copy:{source:'Steam',arguments:'-novid -w 1280'},platform:'win32',steamRunning:true});
+assert.equal(steamPlan.url,'steam://run/620//'+encodeURIComponent('-novid -w 1280')+'/','Steam launch options use the documented steam://run form');
+assert(main.includes('launchPlan.plan('),'launching goes through the launch plan');
 assert(main.includes("case 'launchOptions'")&&main.includes("case 'locateGame'")&&main.includes("case 'selectExecutable'"));
 assert(main.includes('function withOverrides'),'user choices are layered over detected values');
 // SteamGridDB: the game is matched by Steam id, then title, remembered, and can be changed by hand.

@@ -18,6 +18,7 @@ Visit [Nova Web](https://novalaunchergame.vercel.app) for the animated product h
 - Purple default accent, extended Nova wordmark and matching application/favicon/fallback artwork.
 - Private web friends list relayed from Nova on Windows; presence older than 90 seconds is marked as last activity.
 - Console and desktop layouts, gamepad navigation, persistent focus, and on-screen keyboard options.
+- Console mode (unreleased): start with the system, one-press launch with Starting/Running states, automatic return to Nova when a game closes, configurable keyboard and controller shortcuts, and a global shortcut to bring Nova back over a game.
 - Unified installed games and connected store libraries, source selection, favorites and search.
 - Steam Guard QR sign-in with an encrypted local session, automatic session reuse and token renewal.
 - Steam friends and achievements, merged Steam/Discord friend identities, and Hydra progress where supported.

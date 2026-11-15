@@ -1,3 +1,28 @@
+## Unreleased — console experience (prepared, not published)
+
+### Added
+
+- **Console mode** (Settings → Console and controls): start Nova in full screen when you sign in (Windows login item, Linux autostart entry), return to Nova when a game closes, quick start from Home, an optional global shortcut (default Ctrl+Alt+Home) that brings Nova back over a running game, and Windows settings pages opened from Nova. Silencing Windows notification banners is an opt-in, experimental, per-user switch that asks for confirmation and restores the previous value when Nova closes or at the next start.
+- **Launch sessions**: every game moves through Play → Starting → Running, with errors and time-outs reported. A store client opening is not counted as the game running; a second press cannot start the game twice; the exit is detected by the main process, so Nova returns even while hidden behind a fullscreen game.
+- **Smart launch**: the game executable is used when the copy is not tied to a store client; Steam is started with `-silent -applaunch` when it is not running and through its protocol when it is; Epic keeps its silent protocol. A per-game launch method (Automatic, Direct, Through the store) is available in the game options. No licence, sign-in or anti-cheat check is bypassed.
+- **Detection**: installed GOG and Ubisoft Connect games are read from the Windows registry and merged with account libraries without duplicates. Any installed game can be added by choosing its executable, and removed again.
+- **Controller-first Home**: larger covers, a clear selection, Continue playing, a bounded rail with a shortcut to the whole library, Games / News / Apps sections on LB/RB, and state badges on cards.
+- **Controls**: A starts the selected game on Home, X is the quick action, Y searches, Menu opens options, View opens the controls guide. Keyboard equivalents exist for every action, all of them can be reassigned for keyboard and controller, and the hints at the bottom follow the focused element and the device in use.
+- **Performance diagnostics**: start-up timings, memory, CPU and the current game-check interval.
+
+### Changed
+
+- The interface starts loading before the Nova profile is fetched, so the boot screen appears immediately instead of an empty window.
+- The process list is read by the main process at an adaptive pace (1–1.5 s while a game starts or closes, 4 s while it runs, 10 s when idle) instead of every 3 s from the interface.
+- Running games are matched against the folder chosen by the user or found by Nova, not only the one reported by the store.
+
+### Validation and platform limitations
+
+- Automated tests cover the launch plan, session states, console-mode switches, registry parsing and merging, manual games and shortcuts. The real interface was driven in Chromium with a synthetic library, keyboard and a simulated controller (`node scripts/ui-check.cjs`).
+- Not yet run on Windows or in a packaged build: login-item registration, notification silencing, the global shortcut, focus return after a real game, Steam `-silent` start, and registry detection against real GOG / Ubisoft installs. Not yet run in a Linux AppImage: the autostart entry and real game launches.
+- Linux has no notification silencing and no system-settings pages; games started through Proton or Wine may not be recognised as running.
+- A controller cannot bring Nova back while a game has focus; EA app, Battle.net and Xbox/Game Pass installs are not detected automatically and can be added by hand. Nova does not replace the Windows shell: the desktop is visible briefly at sign-in before Nova opens.
+
 ## Nova Launcher 0.1.10
 
 ### Fixed

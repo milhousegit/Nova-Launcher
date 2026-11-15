@@ -1,0 +1,157 @@
+const assert=require('node:assert/strict'),path=require('node:path'),fs=require('node:fs'),os=require('node:os');
+const app=path.join(__dirname,'../app');
+const launchPlan=require(path.join(app,'launch-plan.cjs')),launchSession=require(path.join(app,'launch-session.cjs')),consoleMode=require(path.join(app,'console-mode.cjs')),storeScan=require(path.join(app,'store-scan.cjs')),shortcuts=require(path.join(app,'shortcut-model.js'));
+
+/* ── Launch plan: the least intrusive route wins ── */
+{
+ const exists=p=>['C:\\Games\\Tunic\\Tunic.exe','C:\\Games\\Tunic','C:\\Steam\\steam.exe'].includes(p);
+ const steamGame={steamId:'553420'},steamCopy={source:'Steam',arguments:'-windowed "-profile test"'};
+ const cold=launchPlan.plan({game:steamGame,copy:steamCopy,platform:'win32',steamExe:'C:\\Steam\\steam.exe',steamRunning:false,exists});
+ assert.equal(cold.method,'spawn');assert.deepEqual(cold.args,['-silent','-applaunch','553420','-windowed','-profile test'],'a cold Steam start stays in the tray and keeps the launch options');
+ const warm=launchPlan.plan({game:steamGame,copy:{source:'Steam'},platform:'win32',steamExe:'C:\\Steam\\steam.exe',steamRunning:true,exists});
+ assert.deepEqual([warm.method,warm.url],['uri','steam://rungameid/553420'],'a running Steam is asked through its protocol');
+ assert.equal(launchPlan.plan({game:steamGame,copy:{source:'Steam Family Sharing'},platform:'linux',exists}).method,'uri','Linux always uses the Steam protocol');
+ const epic=launchPlan.plan({game:{},copy:{source:'Epic',appName:'Fortnite Test',executable:'C:\\Games\\Tunic\\Tunic.exe'},exists});
+ assert.equal(epic.url,'com.epicgames.launcher://apps/Fortnite%20Test?action=launch&silent=true','Epic is asked to launch silently');
+ const direct=launchPlan.plan({game:{},copy:{source:'GOG',executable:'C:\\Games\\Tunic\\Tunic.exe',folder:'C:\\Games\\Tunic',arguments:'--skip-intro'},exists});
+ assert.deepEqual([direct.method,direct.file,direct.cwd,direct.launcher],['exe','C:\\Games\\Tunic\\Tunic.exe','C:\\Games\\Tunic',false],'a game with its own executable starts without any client');
+ assert.deepEqual(direct.args,['--skip-intro']);
+ assert.equal(launchPlan.plan({game:steamGame,copy:{...steamCopy,executable:'C:\\Games\\Tunic\\Tunic.exe'},method:'direct',exists}).method,'exe','the user can force the executable');
+ assert.equal(launchPlan.plan({game:steamGame,copy:steamCopy,method:'direct',exists}).reason,'missing-executable');
+ assert.equal(launchPlan.plan({game:{},copy:{source:'Ubisoft',ubisoftId:'635',executable:'C:\\Games\\Tunic\\Tunic.exe'},exists}).method,'exe');
+ assert.equal(launchPlan.plan({game:{},copy:{source:'Ubisoft',ubisoftId:'635',executable:'C:\\Games\\Tunic\\Tunic.exe'},method:'store',exists}).url,'uplay://launch/635/0');
+ assert.equal(launchPlan.plan({game:{},copy:{source:'Ubisoft Connect',ubisoftId:'635'},exists}).url,'uplay://launch/635/0');
+ assert.equal(launchPlan.plan({game:{},copy:{source:'Hydra'},exists}).method,'client');
+ assert.equal(launchPlan.plan({game:{},copy:{source:'GOG'},exists}).method,'error');
+ assert(launchPlan.validMethod('auto')&&!launchPlan.validMethod('admin'));
+ console.log('PASS: launch plan prefers the executable, silent store protocols next, the client last.');
+}
+
+/* ── Launch session: launching → running → ended, no double launch, timeouts ── */
+{
+ let clock=0;const events=[],alive=new Set();
+ const sessions=launchSession.create({matches:g=>alive.has(g.id)?[{}]:[],now:()=>clock,onChange:(event,s)=>events.push(event+':'+s.id+':'+s.state),timeoutMs:1000,errorTtlMs:500,untrackedMs:300});
+ const game={id:'g1',copies:[]};
+ assert.equal(sessions.begin(game,{source:'Steam',id:'steam:1'},{via:'Steam'}).accepted,true);
+ assert.equal(sessions.begin(game,{},{}).accepted,false,'a second press while starting is refused');
+ sessions.tick([]);assert.equal(sessions.snapshot().g1.state,'launching','the store client opening is not the game running');
+ alive.add('g1');clock=400;sessions.tick([]);assert.equal(sessions.snapshot().g1.state,'running');
+ assert.equal(sessions.begin(game,{},{}).accepted,false,'a running game cannot be started again');
+ alive.delete('g1');sessions.tick([]);assert.equal(sessions.snapshot().g1.state,'running','one empty reading is not an exit');assert.equal(sessions.closing(),true);
+ assert.equal(launchSession.pollInterval(sessions.pace()),1000,'a game that may be closing is checked again quickly');
+ alive.add('g1');sessions.tick([]);alive.delete('g1');sessions.tick([]);assert.equal(sessions.snapshot().g1.state,'running','a restart resets the count');
+ const ended=sessions.tick([]);assert.equal(ended.length,1);assert.equal(sessions.has('g1'),false);
+ assert.deepEqual(events,['launching:g1:launching','running:g1:running','ended:g1:ended']);
+ /* timeout → error → cleared, and a retry is allowed while the error is shown */
+ clock=5000;sessions.begin({id:'g2',copies:[]},{},{});clock=6100;sessions.tick([]);
+ assert.deepEqual([sessions.snapshot().g2.state,sessions.snapshot().g2.reason],['error','timeout']);
+ assert.equal(sessions.begin({id:'g2',copies:[]},{},{}).accepted,true,'retry after an error');
+ sessions.fail('g2','start');assert.equal(sessions.snapshot().g2.state,'error');clock=7000;sessions.tick([]);assert.equal(sessions.has('g2'),false,'errors clear by themselves');
+ /* a game that cannot be recognised on disk never turns into a false error */
+ clock=8000;sessions.begin({id:'g3',copies:[]},{},{}, {trackable:false});clock=8400;sessions.tick([]);assert.equal(sessions.has('g3'),false);assert(!events.includes('error:g3:error'));
+ /* adopted games (started outside Nova) are flagged */
+ sessions.adopt({id:'g4',copies:[]});assert.equal(sessions.snapshot().g4.adopted,true);assert.equal(sessions.active(),true);
+ assert.deepEqual([launchSession.pollInterval({}),launchSession.pollInterval({active:true}),launchSession.pollInterval({launching:true,active:true})],[10000,4000,1500],'idle polling is the slowest');
+ console.log('PASS: game sessions track real start and exit, refuse double launches and expire cleanly.');
+}
+
+/* ── Console mode: reversible, opt-in system integration ── */
+(async()=>{
+ const data=fs.mkdtempSync(path.join(os.tmpdir(),'nova-console-'));
+ /* Windows: login item with console arguments, only when installed */
+ let login={openAtLogin:false};
+ const winApp={isPackaged:true,getLoginItemSettings:()=>login,setLoginItemSettings:v=>{login=v;}};
+ const regCalls=[];let stored=null;
+ const execFile=(file,args,options,cb)=>{regCalls.push(args.join(' '));if(args[0]==='query')return stored===null?cb(Error('missing')):cb(null,'    ToastEnabled    REG_DWORD    0x'+stored.toString(16));if(args[0]==='add')stored=Number(args[args.indexOf('/d')+1]);if(args[0]==='delete')stored=null;cb(null,'');};
+ const opened=[];
+ const win=consoleMode.create({app:winApp,platform:'win32',data,execFile,env:{SystemRoot:'C:\\Windows'},args:[],openExternal:async url=>{opened.push(url);}});
+ assert.equal(win.autostart.get(),false);assert.equal(win.autostart.set(true),true);
+ assert.deepEqual(login.args,['--bigscreen','--autostart'],'Nova starts straight into the console layout');
+ assert.equal(win.autostart.set(false),false);
+ const preview=consoleMode.create({app:{...winApp,isPackaged:false},platform:'win32',data,args:[]});
+ assert.equal(preview.autostart.supported(),false);assert.throws(()=>preview.autostart.set(true),'a development build never registers itself');
+ /* notifications: previous value saved first, restored exactly, crash-safe */
+ stored=1;assert.equal(win.quiet.active(),false);await win.quiet.enable();
+ assert.equal(stored,0);assert.equal(win.quiet.active(),true);assert.equal(JSON.parse(fs.readFileSync(path.join(data,'console-mode.json'),'utf8')).toast,1);
+ const afterCrash=consoleMode.create({app:winApp,platform:'win32',data,execFile,env:{},args:[]});
+ assert.equal(afterCrash.quiet.active(),true,'an interrupted session is still restorable');
+ await afterCrash.quiet.restore();assert.equal(stored,1);assert.equal(fs.existsSync(path.join(data,'console-mode.json')),false);
+ stored=null;await win.quiet.enable();assert.equal(stored,0);await win.quiet.restore();assert.equal(stored,null,'a value that did not exist is removed again');
+ assert.equal(await win.quiet.restore(),false,'restoring twice changes nothing');
+ assert(regCalls.every(c=>c.includes('HKCU\\')),'only the current user is ever touched');
+ /* settings pages are a closed list */
+ await win.openSettings('network');assert.deepEqual(opened,['ms-settings:network']);
+ await assert.rejects(()=>win.openSettings('cmd.exe'));await assert.rejects(()=>win.openSettings('constructor'));
+ /* Linux: a desktop entry in the user's autostart folder */
+ const home=fs.mkdtempSync(path.join(os.tmpdir(),'nova-home-'));
+ const linux=consoleMode.create({app:{isPackaged:true},platform:'linux',data,env:{APPIMAGE:'/opt/Nova Launcher.AppImage'},home,args:[]});
+ assert.equal(linux.autostart.set(true),true);
+ const entry=fs.readFileSync(path.join(home,'.config','autostart','nova-launcher.desktop'),'utf8');
+ assert(entry.includes('Exec="/opt/Nova Launcher.AppImage" --bigscreen --autostart'));
+ assert.equal(linux.autostart.set(false),false);assert.equal(fs.existsSync(path.join(home,'.config','autostart','nova-launcher.desktop')),false);
+ assert.equal(linux.quiet.supported(),false);await assert.rejects(()=>linux.openSettings('network'));
+ /* focus: through always-on-top on Windows, restored afterwards */
+ const calls=[],fakeWindow={isDestroyed:()=>false,isMinimized:()=>true,restore:()=>calls.push('restore'),show:()=>calls.push('show'),focus:()=>calls.push('focus'),moveTop:()=>calls.push('top'),setAlwaysOnTop:v=>calls.push('pin:'+v)};
+ assert.equal(win.focusWindow(fakeWindow),true);assert.deepEqual(calls,['restore','show','pin:true','focus','top','pin:false']);
+ assert.equal(win.focusWindow(null),false);
+ for(const ok of ['Control+Alt+Home','Alt+F1','Control+Shift+G','Control+Alt+Shift+9'])assert(consoleMode.validAccelerator(ok),ok);
+ for(const bad of ['Home','Shift+A','Alt+F4','Alt+Tab','Control+Alt+Delete','Control+Control+A','Super+A','Control+Escape',''])assert(!consoleMode.validAccelerator(bad),bad);
+ console.log('PASS: autostart, notification silencing, settings pages and window focus are opt-in and reversible.');
+})().catch(e=>{console.error(e);process.exitCode=1;});
+
+/* ── Store scan and manual games ── */
+{
+ const exists=p=>!/Missing/.test(p);
+ const raw={gog:[{id:'1207658924',name:'Unreal Gold',path:'D:\\GOG\\Unreal Gold',exe:'System\\Unreal.exe',args:'-windowed',dependsOn:''},{id:'2',name:'Unreal Soundtrack',path:'D:\\GOG\\Unreal Gold',exe:'x.exe',dependsOn:'1207658924'},{id:'3',name:'Gone',path:'D:\\GOG\\Missing',exe:'a.exe',dependsOn:''},{id:'1207658924',name:'Unreal Gold',path:'D:\\GOG\\Unreal Gold',exe:'System\\Unreal.exe',dependsOn:''}],ubisoft:{id:'635',path:'D:/Ubisoft/Rayman_Legends/'}};
+ const found=storeScan.parse(raw,exists);
+ assert.deepEqual(found.map(f=>f.source+':'+f.title),['GOG:Unreal Gold','Ubisoft:Rayman Legends'],'add-ons, missing folders and duplicates are dropped');
+ assert.equal(found[0].executable,'D:\\GOG\\Unreal Gold\\System\\Unreal.exe');
+ const library={games:[{id:'ubi:1',title:'Rayman Legends',copies:[{id:'ubisoft:x',source:'Ubisoft Connect',installed:false}]}]};
+ assert.equal(storeScan.merge(library,found),2);
+ assert.equal(library.games.length,2,'a game already known through an account is not duplicated');
+ assert.deepEqual([library.games[0].copies.length,library.games[0].copies[0].installed,library.games[0].copies[0].ubisoftId],[1,true,'635']);
+ assert.equal(storeScan.merge(library,found),0,'a second scan changes nothing');
+ storeScan.prune(library,[found[1]]);assert.equal(library.games[1].copies[0].installed,false,'an uninstalled game is no longer playable');
+ const added=storeScan.addLocal(library,path.join(os.tmpdir(),'Games','Hollow Knight','hollow_knight.exe'));
+ assert.equal(added.game.title,'Hollow Knight');assert.equal(added.copy.source,'Locale');
+ storeScan.addLocal(library,path.join(os.tmpdir(),'Games','Hollow Knight','hollow_knight.exe'));assert.equal(library.games.filter(g=>g.title==='Hollow Knight').length,1,'adding the same file twice keeps one entry');
+ const merged=storeScan.addLocal(library,path.join(os.tmpdir(),'Other','Rayman Legends','Rayman.exe'));assert.equal(merged.game,library.games[0],'a manual copy joins the existing game page');
+ assert.equal(storeScan.removeLocal(library,library.games[0].id),true);assert.equal(library.games[0].copies.every(c=>c.source!=='Locale'),true);
+ assert.equal(storeScan.removeLocal(library,added.game.id),true);assert.equal(library.games.some(g=>g.title==='Hollow Knight'),false);
+ assert.equal(storeScan.removeLocal(library,'missing'),false);
+ assert.equal(storeScan.titleFrom(path.join('x','Celeste','bin','Celeste.exe')),'Celeste');
+ console.log('PASS: registry installs merge without duplicates and manual games can be added and removed.');
+}
+
+/* ── Shortcuts: defaults, overrides, swaps and reserved keys ── */
+{
+ const base=shortcuts.resolve({});
+ assert.deepEqual([base.keys.search,base.pad.search,base.pad.sectionPrev,base.pad.sectionNext,base.pad.options],['/',3,4,5,9],'Y searches, LB/RB change section, Menu opens options');
+ assert.equal(shortcuts.actionForKey(base,'Ctrl+k'),'search','aliases work next to the default');
+ assert.equal(shortcuts.actionForPad(base,2),'quick');assert.equal(shortcuts.actionForPad(base,0),'','A is never an assignable action');
+ let custom=shortcuts.assign({}, 'keys','search','s');
+ assert.deepEqual(custom,{keys:{search:'s'},pad:{}},'only the difference from the defaults is stored');
+ custom=shortcuts.assign(custom,'keys','favorite','x');
+ assert.deepEqual([shortcuts.resolve(custom).keys.favorite,shortcuts.resolve(custom).keys.quick],['x','f'],'a key already in use swaps the two actions');
+ assert.equal(shortcuts.assign({}, 'keys','search','Enter').keys.search,undefined,'navigation keys cannot be taken');
+ assert.equal(shortcuts.assign({}, 'pad','search',0).pad.search,undefined,'A and B cannot be reassigned');
+ assert.equal(shortcuts.assign({}, 'pad','search',13).pad.search,undefined,'the D-pad cannot be reassigned');
+ assert.deepEqual(shortcuts.assign({}, 'pad','search',2).pad,{search:2,quick:3});
+ assert.equal(shortcuts.resolve({keys:{search:'Escape'},pad:{search:99}}).keys.search,'/','invalid stored values fall back to the defaults');
+ assert.equal(shortcuts.combo({key:'K',ctrlKey:true}),'Ctrl+k');assert.equal(shortcuts.combo({key:'F1',shiftKey:true}),'Shift+F1');assert.equal(shortcuts.combo({key:'Shift'}),'');
+ assert.deepEqual([shortcuts.padName(3,'Xbox'),shortcuts.padName(3,'PlayStation'),shortcuts.padName(null),shortcuts.keyName('Ctrl+,'),shortcuts.keyName('PageUp')],['Y','△','—','Ctrl + ,','PgUp']);
+ console.log('PASS: shortcuts keep safe defaults, store only changes and swap on conflict.');
+}
+
+/* ── Wiring: the shell loads after the scripts it extends and before localisation ── */
+{
+ const html=fs.readFileSync(path.join(app,'index.html'),'utf8'),at=name=>html.indexOf('src="'+name+'"');
+ assert(at('console-shell.js')>at('game-setup-ui.js')&&at('console-shell.js')>at('settings-ui.js')&&at('shortcut-model.js')<at('console-shell.js'));
+ assert(at('en-console.js')>at('en.js')&&at('en-console.js')<at('i18n.js'));
+ assert(html.indexOf('href="console-shell.css"')>html.indexOf('href="console-ui.css"'));
+ const css=fs.readFileSync(path.join(app,'console-shell.css'),'utf8');assert(!/blur\(/.test(css),'the shell layer adds no blur');
+ const main=fs.readFileSync(path.join(app,'main.cjs'),'utf8');
+ assert(main.indexOf('win.loadFile(')<main.indexOf('await loadNovaProfile();else loadGuestProfile();if(process.argv.includes'),'the interface starts loading before the profile is fetched');
+ assert(!/Defender|DisableAntiSpyware|EnableLUA|wuauserv|Winlogon/i.test(main+fs.readFileSync(path.join(app,'console-mode.cjs'),'utf8').replace(/\/\*[\s\S]*?\*\//g,'')),'security features and the Windows shell are never modified');
+ console.log('PASS: shell scripts, styles and startup order are wired correctly.');
+}

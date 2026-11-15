@@ -1,0 +1,95 @@
+/* Console shell: Home built for a TV across the room, launch states, shortcut and diagnostics panels.
+   Loaded after console-ui.css. Only opacity and transform are animated. */
+
+/* ── Home: bigger covers, one unmistakable selection ───────────────────────── */
+/* The rail owns the bottom of the screen; the hero sits right above it and gives up detail first when space is short. */
+body:not(.desktop-mode) .home{grid-template-rows:minmax(0,1fr) auto;--game-brand-height:clamp(84px,13vh,150px)}
+body:not(.desktop-mode) .home .hero{height:100%;align-items:flex-end;padding-top:0;padding-bottom:clamp(14px,2.4vh,28px);overflow:hidden}
+body:not(.desktop-mode) .home .down{display:none}
+body:not(.desktop-mode) .home .recent{padding-bottom:clamp(6px,1.4vh,18px)}
+body:not(.desktop-mode) .home .rail{gap:20px;padding:26px 14px 16px;margin:0 -12px;align-items:flex-end}
+body:not(.desktop-mode) .home .rail .game-card,.rail-more{width:clamp(128px,19vh,214px);flex:0 0 auto}
+@media(max-height:820px){body:not(.desktop-mode) .home .hero-sub{display:none}body:not(.desktop-mode) .home .hero-copy{gap:8px}}
+@media(max-height:680px){body:not(.desktop-mode) .home .hero-eyebrow{display:none}}
+.home .rail .game-card{opacity:.74;transform-origin:center bottom;transition:transform var(--t) var(--ease-out),opacity var(--t) linear}
+.home .rail .game-card.selected,.home .rail .game-card.controller-focus,.home .rail .game-card:hover{opacity:1}
+.home .rail .game-card.selected{transform:translateY(-6px) scale(1.045)}
+body.reduce-motion .home .rail .game-card{transition:none}
+.rail-head{align-items:center;gap:20px}
+.rail-head small{color:var(--text-2);font-size:15px;white-space:nowrap}
+.rail-head small b{color:var(--ink);font-weight:600}
+.home-tabs{display:flex;align-items:center;gap:8px;margin:0}
+.home-tab{display:inline-flex;align-items:center;height:40px;padding:0 20px;border-radius:999px;font-size:17px;color:var(--text-2);cursor:pointer;transition:background var(--t-fast) linear,color var(--t-fast) linear}
+.home-tab:hover{color:var(--ink);background:#ffffff0f}
+.home-tab.active{background:var(--ink);color:#142021;font-weight:600}
+.lower-heading .home-tabs{margin-bottom:6px}
+.rail-more{aspect-ratio:2/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:14px;border-radius:12px;border:1px dashed var(--line-2);background:#ffffff08;color:var(--text-2);text-align:center}
+.rail-more svg{width:34px;height:34px;stroke:currentColor;fill:none;stroke-width:1.6}
+.rail-more strong{color:var(--ink);font-size:17px;font-weight:600}
+.rail-more small{font-size:13px}
+.rail-more.controller-focus,.rail-more:hover{background:#ffffff14;color:var(--ink)}
+
+/* Card badges: what is running, what to continue */
+.card-continue,.card-state{position:absolute;left:8px;bottom:8px;z-index:2;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:.02em;background:#0b1013e6;color:var(--ink);border:1px solid var(--line-2)}
+.card-state{display:inline-flex;align-items:center;gap:7px;border-color:transparent;background:var(--accent);color:#14101c}
+.card-state::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor;animation:shellPulse 1.4s ease-in-out infinite}
+.card-state[data-state=running]{background:#8fe08f;color:#0d1f0f}
+@keyframes shellPulse{50%{opacity:.25}}
+body.reduce-motion .card-state::before{animation:none}
+
+/* Hero: why this game is here, at a glance */
+.hero-eyebrow{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:14px;color:var(--text-2)}
+.hero-continue{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.hero-chip{padding:4px 12px;border-radius:999px;border:1px solid var(--line-2);background:#0b101399;color:var(--ink);font-size:13px}
+.hero-chip.is-ready{border-color:#8fe08f66;color:#b6f0b6}
+.hero-last{display:inline-flex;gap:7px}.hero-last b{color:var(--ink);font-weight:500}
+
+/* Play button states */
+.action[data-launch-state=launching]{background:var(--accent);color:#14101c}
+.action[data-launch-state=launching] svg{animation:shellSpin 1.1s linear infinite}
+.action[data-launch-state=running]{background:#8fe08f;color:#0d1f0f}
+.action[data-launch-state=error]{background:#ffb3a8;color:#2a0d08}
+@keyframes shellSpin{to{transform:rotate(360deg)}}
+body.reduce-motion .action[data-launch-state=launching] svg{animation:none}
+
+/* ── Launch veil: Nova hands the screen to the game ────────────────────────── */
+#launch-veil{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:#070a0d;animation:sheetIn .18s linear both}
+#launch-veil[hidden]{display:none}
+.veil-art{position:absolute;inset:0;background-size:cover;background-position:center 30%;opacity:.22}
+.veil-art::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,transparent 0%,#070a0d 78%)}
+.veil-card{position:relative;display:flex;align-items:center;gap:44px;max-width:min(980px,86vw);animation:rise .32s var(--ease-out) both}
+.veil-card img{width:clamp(170px,24vh,270px);aspect-ratio:2/3;object-fit:cover;border-radius:16px;box-shadow:0 30px 80px #000c}
+.veil-copy{display:flex;flex-direction:column;align-items:flex-start;gap:14px;min-width:0}
+.veil-state{font-family:var(--mono);font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+#launch-veil[data-state=running] .veil-state{color:#8fe08f}
+.veil-copy h2{margin:0;font-size:clamp(34px,5vh,56px);line-height:1.05;font-weight:600;overflow-wrap:anywhere}
+.veil-source{margin:0;display:flex;gap:9px;color:var(--text-2);font-size:17px}.veil-source b{color:var(--ink);font-weight:500}
+.veil-bar{display:block;width:min(360px,46vw);height:3px;border-radius:3px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:bootSweep 1.5s ease-in-out infinite;transform-origin:center}
+#launch-veil[data-state=running] .veil-bar{animation:none;background:#8fe08f}
+.veil-copy .hint{margin-top:10px;color:var(--text-3)}
+body.reduce-motion .veil-bar,body.reduce-motion .veil-card{animation:none}
+
+/* ── Panels: session, shortcuts, help, diagnostics ─────────────────────────── */
+.session-card{display:flex;align-items:center;gap:18px;padding:16px;margin-bottom:18px;border-radius:var(--r);background:var(--s2);border:1px solid var(--line)}
+.session-card img{width:62px;aspect-ratio:2/3;object-fit:cover;border-radius:8px}
+.session-card span{display:flex;flex-direction:column;gap:4px;min-width:0}
+.session-card small{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8fe08f}
+.session-card strong{font-size:21px;font-weight:600;overflow-wrap:anywhere}
+.shortcut-legend{display:flex;justify-content:flex-end;gap:14px;padding:0 18px 8px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3)}
+.shortcut-legend span{min-width:86px;text-align:center}
+.shortcut-row .row-copy{flex:1}
+.shortcut-keys{display:inline-flex;align-items:center;gap:14px;flex-shrink:0}
+.shortcut-row .shortcut-keys .key{min-width:86px;height:32px;padding:0 10px;display:inline-flex;align-items:center;justify-content:center;font-size:13px}
+.help-list{display:grid;gap:4px;margin:6px 0 18px}
+.help-row{display:grid;grid-template-columns:minmax(150px,auto) 1fr;align-items:center;gap:20px;padding:11px 14px;border-radius:var(--r-sm);font-size:17px}
+.help-row:nth-child(odd){background:#ffffff07}
+.help-row .shortcut-keys{gap:6px}
+.help-row .key{height:30px;min-width:34px;padding:0 9px;display:inline-flex;align-items:center;justify-content:center;font-size:13px}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.stat-tile{display:flex;flex-direction:column;gap:6px;padding:18px;border-radius:var(--r);background:var(--s2);border:1px solid var(--line)}
+.stat-tile strong{font-size:28px;font-weight:600;font-variant-numeric:tabular-nums}
+.stat-tile span{font-size:14px;color:var(--text-2)}
+
+/* Footer hints stay on one line on a TV; the least important ones drop first on narrow windows */
+#footer .hints{flex-wrap:nowrap;overflow:hidden;white-space:nowrap}
+@media(max-width:1100px){.hero-last,.rail-head small{display:none}}
