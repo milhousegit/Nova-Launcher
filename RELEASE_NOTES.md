@@ -1,3 +1,22 @@
+## Nova Launcher 0.1.13
+
+### Fixed
+
+- **Interrupted updates**: a silent update could leave Nova half removed, so that it no longer opened ("Failed to uninstall old application files" from the installer, then a blank or restarting Nova). The installer started while Nova was still saving and closing, and AnyFSE, the sign-in start or the updater's own relaunch could start Nova again while its old files were being removed. The Windows installer now makes the old copy unstartable for the duration of the update, gives Nova a few seconds to close, and then closes every process running from the installation folder (Nova, the Discord adapter, the bundled Node runtime, the device service). If that, or removing the old version, is not possible, the installed copy is restored untouched and started again.
+- The installer (Windows) and the new AppImage (Linux) start only after Nova has exited, so the new version is no longer turned away by the copy that is still closing.
+- **Update downloads**: a download now stops only after a minute without data instead of after five minutes in total, so slower connections can download the installer. A verified download stays ready across later checks and is not downloaded again.
+- The Updates screen shows a readable error instead of "Error invoking remote method 'nova'".
+
+### Changed
+
+- The Windows installer now includes the Discord Social SDK, so the published EXE works with Discord without replacing it by hand.
+
+### Validation and platform limitations
+
+- Automated tests cover the restart-after-exit helpers for both platforms, the ready state across checks, stalled downloads and the installer hooks. The Linux restart helper was run against a real process. The Windows installer with the new hooks was compiled by GitHub Actions.
+- Not yet run on a Windows PC: the installer closing Nova and its helper processes, blocking restarts from AnyFSE during the update, and restoring the old copy when an update fails. Updating from 0.1.12 uses the 0.1.12 updater with the new 0.1.13 installer; the restart-after-exit helper takes effect from the next update.
+- If an earlier update already left Nova unable to open, install `nova-launcher-v0.1.13.exe` from Releases by hand; data and accounts are kept.
+
 ## Nova Launcher 0.1.12
 
 ### Added
