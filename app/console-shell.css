@@ -138,7 +138,13 @@ body:not(.desktop-mode) #overlay:not([data-kind=dropdown]):not([data-kind=galler
 .collection .rail-head small{display:inline-flex;align-items:center;gap:8px}
 .collection .rail-head .action.square{width:40px;height:40px;padding:0;margin-left:8px}
 .collection-rail{gap:18px;padding:12px 12px 14px;margin:0 -12px}
-.collection-rail .game-card,.collection-rail .rail-more{width:clamp(120px,16vh,180px);flex:0 0 auto}
+.collection-rail .game-card,.collection-rail .rail-more{width:var(--library-card);flex:0 0 auto}
+/* One cover size for All games and Collections */
+.library-page{--library-card:clamp(140px,17.5vh,196px)}
+.library-page .game-grid{grid-template-columns:repeat(auto-fill,var(--library-card));gap:26px 18px;justify-content:start}
+.library-switch{display:flex;margin:-6px 0 18px}
+.library-page .library-tools{margin-top:0}
+.collections-tools{grid-template-columns:1fr}
 
 /* ── Storage and system updates ────────────────────────────────────────────── */
 .drive{display:grid;gap:10px;padding:16px;margin-bottom:10px;border-radius:var(--r);background:var(--s2);border:1px solid var(--line)}
@@ -150,3 +156,40 @@ body:not(.desktop-mode) #overlay:not([data-kind=dropdown]):not([data-kind=galler
 .update-row strong{font-size:16px;font-weight:500;overflow-wrap:anywhere}
 .update-row small{color:var(--text-2);font-size:14px}
 .panel-section h3 .count{margin-left:8px;color:var(--text-2);font-weight:400}
+
+/* ── Explore calendar: agenda rows and skeleton ──────────────────────────── */
+.calendar-day{display:grid;grid-template-columns:96px minmax(0,1fr);gap:24px;align-items:start;padding:18px 0;border-top:1px solid var(--line);content-visibility:auto;contain-intrinsic-size:auto 340px}
+.calendar-date{display:grid;justify-items:start;gap:2px;padding-top:10px}
+.calendar-date strong{font-size:44px;font-weight:500;line-height:1;letter-spacing:-.02em}
+.calendar-date span,.calendar-date small{color:var(--text-2);font-size:15px;text-transform:capitalize}
+.calendar-date .calendar-date-text{font-size:16px;color:var(--ink);text-transform:none}
+.calendar-rail{grid-auto-columns:clamp(140px,17.5vh,196px);gap:18px;padding-top:4px}
+.calendar-rail .shop-card-price{font-size:15px}
+.calendar-day-skeleton .calendar-date i{display:block;width:56px;height:44px;border-radius:10px}
+.calendar-day-skeleton .calendar-date b{display:block;width:40px;height:14px;border-radius:6px;margin-top:8px}
+.calendar-skeleton-covers{display:flex;gap:18px;overflow:hidden}
+.calendar-skeleton-covers i{flex:0 0 clamp(140px,17.5vh,196px);aspect-ratio:2/3;border-radius:14px}
+.calendar-day-skeleton i,.calendar-day-skeleton b,.activity-skeleton i{background:#ffffff0f;animation:skeletonPulse 1.3s ease-in-out infinite}
+.activity-skeleton{display:flex;gap:10px;width:100%}
+.activity-skeleton i{display:block;flex:1;height:38px;border-radius:10px}
+body.reduce-motion .calendar-day-skeleton i,body.reduce-motion .calendar-day-skeleton b,body.reduce-motion .activity-skeleton i{animation:none}
+
+/* ── Profile: aligned with the other pages, compact hero, library-size covers ── */
+.recap-profile{max-width:none;--library-card:clamp(140px,17.5vh,196px)}
+.recap-hero{min-height:0}
+.recap-hero-content{padding:30px 34px}
+.recap-profile .personal-identity{margin:0 0 30px}
+.recap-hero-bottom{align-items:stretch}
+.recap-hero-stats{flex:1 1 auto;margin:0;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.recap-hero-stats .recap-stat{background:#0b0c12cc}
+.recap-spotlight{align-self:stretch}
+.recap-game-grid,.recap-game-grid.recent{grid-template-columns:repeat(auto-fill,var(--library-card));gap:22px 18px;justify-content:start}
+.recap-rank{font-size:34px;bottom:10px;left:12px}
+.recap-share{width:100%;height:4px;appearance:none;border:0;border-radius:4px;overflow:hidden;background:#ffffff12}
+.recap-share::-webkit-progress-bar{background:#ffffff12}
+.recap-share::-webkit-progress-value{background:var(--accent);border-radius:4px}
+.recap-count-details{margin-top:22px}
+@media(max-width:1300px){.recap-hero-bottom{flex-direction:column}.recap-hero-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.recap-spotlight{max-width:none}}
+.recap-hero{margin-bottom:44px}
+.recap-game>span:not(.recap-cover){font-size:13px;color:#ad9cbe}
+.recap-count-details{min-height:46px;font-size:15px}

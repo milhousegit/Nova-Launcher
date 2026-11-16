@@ -20,6 +20,8 @@
   ];
  }
  const viewToggle=()=>`<div class="view-toggle" role="group" aria-label="Vista della libreria"><button data-library-view="collections" aria-pressed="${libraryView==='collections'}">Raccolte</button><button data-library-view="all" aria-pressed="${libraryView==='all'}">Tutti i giochi</button></div>`;
+ /* The switch has its own row under the title in both views, so it never moves; the search bar is in both views too. */
+ const switchRow=()=>`<div class="library-switch">${viewToggle()}</div>`;
  function railMarkup(c,custom){
   const shown=c.games.slice(0,rowLimit);
   return `<section class="collection" data-collection="${esc(c.id)}"><div class="rail-head"><h2>${esc(c.name)}</h2><small><b>${c.games.length}</b> <span>${c.games.length===1?'gioco':'giochi'}</span>${custom?`<button class="action square" data-collection-edit="${esc(c.id)}" aria-label="Modifica raccolta">${icon('settings')}</button>`:''}</small></div>${shown.length?`<div class="rail collection-rail">${shown.map(g=>cover(g)).join('')}${c.games.length>rowLimit?`<button class="rail-more" data-library-view="all" aria-label="Tutti i giochi">${icon('library')}<strong>Tutti i giochi</strong></button>`:''}</div>`:'<p class="note">Aggiungi un gioco dalle sue opzioni: Opzioni del gioco → Raccolte.</p>'}</section>`;
@@ -27,15 +29,15 @@
  function collectionsMarkup(){
   const mine=collections().map(c=>({id:c.id,name:c.name,games:c.games.map(game).filter(Boolean)}));
   const rows=builtIn().filter(c=>c.games.length).map(c=>railMarkup(c,false)).join('')+mine.map(c=>railMarkup(c,true)).join('');
-  return `<section class="page library-page library-collections"><div class="page-heading"><div><h1>La tua libreria</h1><p>${state.games.length} ${state.games.length===1?'gioco':'giochi'}</p></div><div class="library-heading-actions">${viewToggle()}<button class="action" data-action="collection-new">${icon('folder')}Nuova raccolta</button></div></div>${rows||'<div class="empty"><h2>La tua libreria, qui.</h2><p>Collega uno store o aggiungi un gioco installato dalle impostazioni.</p></div>'}</section>`;
+  return `<section class="page library-page library-collections"><div class="page-heading"><div><h1>La tua libreria</h1><p>${state.games.length} ${state.games.length===1?'gioco':'giochi'}</p></div><div class="library-heading-actions"><button class="action" data-action="collection-new">${icon('folder')}Nuova raccolta</button></div></div>${switchRow()}<div class="library-tools collections-tools"><div class="search">${icon('search')}<input id="library-search" aria-label="Cerca nella libreria" placeholder="Cerca un gioco…" value=""><button class="action square" data-action="search-keyboard" aria-label="Apri tastiera">${icon('keyboard')}</button></div></div>${rows||'<div class="empty"><h2>La tua libreria, qui.</h2><p>Collega uno store o aggiungi un gioco installato dalle impostazioni.</p></div>'}</section>`;
  }
  const baseLibrary=libraryMarkup;
  libraryMarkup=function(){
   if(state.settings.fullscreen===false)return baseLibrary();
   if(libraryView==='collections'&&!query)return collectionsMarkup();
-  return baseLibrary().replace('<div class="library-heading-actions">','<div class="library-heading-actions">'+viewToggle());
+  return baseLibrary().replace('<div class="library-tools">',switchRow()+'<div class="library-tools">');
  };
- function setView(view){libraryView=view;try{localStorage.setItem('nova.libraryView',view);}catch{}if(view==='collections')query='';if(page==='library'&&!detailGame){render();focusFirst();}}
+ function setView(view){libraryView=view;try{localStorage.setItem('nova.libraryView',view);}catch{}if(view==='collections')query='';if(page==='library'&&!detailGame){render();/* After the redraw has put focus back on the switch, which is in the same place in both views. */requestAnimationFrame(()=>focusFirst());}}
  /* Search always works on the whole library. */
  const baseSearch=window.novaShell.openSearch;
  window.novaShell.openSearch=function(){if(libraryView!=='all'){libraryView='all';if(page==='library'&&!detailGame&&!panels.length)render();}baseSearch();};
