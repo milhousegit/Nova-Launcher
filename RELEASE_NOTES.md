@@ -1,3 +1,18 @@
+## Nova Launcher 0.1.14
+
+### Improved
+
+- **Explore calendar**: opening the release calendar no longer slows Nova down. Each store result page is now read from the cache once instead of once per game, cache files are written in the background, and a month already shown opens instantly (it is kept for 10 minutes, until filters, wishlist or library change). The same fix speeds up "Coming this week" and store search.
+- The calendar is shown as an agenda: one row per day, with the date on the left and the day's games with library-sized covers.
+- **Library**: All games and Collections now use the same cover size, the view switch has its own row and stays in the same place in both views, and both views have a search bar.
+- **Profile**: the page uses the full width like the other pages, the header is compact and shows the four statistics and the most played game, and the most played games use library-sized covers with a bar for their share of play time.
+- Skeleton placeholders replace the loading texts for the calendar and for achievements (store page and game page).
+
+### Validation and platform limitations
+
+- Automated tests cover the calendar cache reads and the month memoization; the full interface check passes. A synthetic month with 3,000 releases went from about 7 s to about 0.2 s.
+- Not yet run on a Windows PC or with a real library; the changed code is shared by Windows and Linux.
+
 ## Nova Launcher 0.1.13
 
 ### Fixed
