@@ -1,3 +1,24 @@
+## Nova Launcher 0.1.15
+
+### Changed
+
+- **Home and menu**: the top bar now holds every page in one centred menu (Home, Library, Explore, News, Apps, Profile, Settings), with LB and RB shown on its sides to move between them. LT and RT switch tabs inside Explore.
+- **News** and **Apps** are now pages of their own in the menu.
+- **Game page**: the right side shows an information panel with the store, play time, last played, achievements progress, developer, publisher, year, genres and HowLongToBeat. The background behind the game is slightly blurred.
+
+### Added
+
+- **RecompLauncher**: it can be linked from Accounts and libraries. Nova reads RecompLauncher's library (installed games, play time, last played) and starts games through RecompLauncher, so its own features keep working. If RecompLauncher is not found, Nova offers its download page.
+
+### Fixed
+
+- The focus outline no longer restarts its animation and flickers when a page refreshes, and pages no longer replay their entrance animation when their content updates.
+
+### Validation and platform limitations
+
+- Automated tests cover reading RecompLauncher's library on Windows and Linux paths; the full interface check passes.
+- Not yet run on a Windows PC or with a real RecompLauncher installation; the changed code is shared by Windows and Linux.
+
 ## Nova Launcher 0.1.14
 
 ### Improved

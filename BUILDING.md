@@ -8,7 +8,7 @@ Use Windows 10/11 x64, Node.js 24 and npm. The root package builds the Electron 
 4. Native Windows helpers and their source are included under `tools/` and `native/`. The Discord adapter uses the Discord Social SDK, which is distributed under Discord's terms rather than the application MIT license. Build changes to this adapter with the matching SDK and your application's public Client ID.
 5. Run `npm test`, `npm run start`, and `npm run dist`.
 
-The NSIS installer is written to `dist/nova-launcher-v0.1.14.exe`. Signing is not configured; use your own code-signing certificate for a signed distribution. Keep all runtime `data/`, profile sessions, tokens and `.env` files out of source control and installer inputs.
+The NSIS installer is written to `dist/nova-launcher-v0.1.15.exe`. Signing is not configured; use your own code-signing certificate for a signed distribution. Keep all runtime `data/`, profile sessions, tokens and `.env` files out of source control and installer inputs.
 
 Store credentials are never build inputs. Tests use synthetic fixtures and do not log in to an account.
 
@@ -25,9 +25,9 @@ npm test
 npm run dist:linux
 ```
 
-The artifact is `dist/nova-launcher-v0.1.14-linux-x86_64.AppImage`.
+The artifact is `dist/nova-launcher-v0.1.15-linux-x86_64.AppImage`.
 Make it executable with `chmod +x` before launching. Systems without FUSE can use
-`./nova-launcher-v0.1.14-linux-x86_64.AppImage --appimage-extract-and-run`.
+`./nova-launcher-v0.1.15-linux-x86_64.AppImage --appimage-extract-and-run`.
 Windows helper binaries are excluded from Linux packages. This is an experimental
 Linux build: local Windows store discovery, Discord native adapter, Wi-Fi,
 Bluetooth, Steam firewall controls and AnyFSE are not ported. Account credential
