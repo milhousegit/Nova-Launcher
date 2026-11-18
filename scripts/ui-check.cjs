@@ -54,7 +54,7 @@ const init=()=>{
  assert.equal(await page.locator('.home .home-tabs').count(),0,'News and Apps are pages of the top menu, not tabs on Home');
  assert.equal(await page.locator('.home .down').count(),0);
  assert.deepEqual(await page.evaluate(()=>[...document.querySelectorAll('header nav button')].map(b=>b.dataset.page)),['home','library','explore','news','apps','profile','settings'],'one menu at the top for every page');
- assert.deepEqual(await page.evaluate(()=>[...document.querySelectorAll('header nav [data-prompt]')].map(e=>e.dataset.prompt)),['lb','rb'],'the bumpers sit on the two sides of the menu');
+ assert.deepEqual(await page.evaluate(()=>[...document.querySelectorAll('header nav [data-prompt]')].map(e=>e.dataset.prompt)),['lt','rt'],'the triggers sit on the two sides of the menu');
  await page.screenshot({path:path.join(out,'01-home.png')});
 
  /* 2. One press starts the game; states follow the session */
@@ -87,14 +87,14 @@ const init=()=>{
 
  /* 3. The top menu with Q/E and the controller bumpers */
  const active=()=>text('header nav button.active');
- await press(5);await page.waitForTimeout(350);assert.equal(await active(),'Library','RB moves to the next page of the menu');
+ await press(7);await page.waitForTimeout(350);assert.equal(await active(),'Library','RT moves to the next page of the menu');
  assert.equal(await page.evaluate(()=>document.body.dataset.input),'xbox');
- assert(/LB/.test(await text('header nav'))&&/RB/.test(await text('header nav')),'bumper glyphs follow the device');
- await press(5);await page.waitForTimeout(350);await press(5);await page.waitForTimeout(350);assert.equal(await active(),'News');
+ assert(/LT/.test(await text('header nav'))&&/RT/.test(await text('header nav')),'trigger glyphs follow the device');
+ await press(7);await page.waitForTimeout(350);await press(7);await page.waitForTimeout(350);assert.equal(await active(),'News');
  assert.equal(await page.locator('.section-page[data-section=news]').count(),1,'News is its own page');
- await press(5);await page.waitForTimeout(350);assert.equal(await active(),'Apps');assert.equal(await page.locator('.section-page[data-section=apps] .client').count(),8);
- for(let i=0;i<4;i++){await press(4);await page.waitForTimeout(350);}
- assert.equal(await active(),'Home','LB walks back to Home');assert.equal(await page.locator('#recent-rail').count(),1);
+ await press(7);await page.waitForTimeout(350);assert.equal(await active(),'Apps');assert.equal(await page.locator('.section-page[data-section=apps] .client').count(),8);
+ for(let i=0;i<4;i++){await press(6);await page.waitForTimeout(350);}
+ assert.equal(await active(),'Home','LT walks back to Home');assert.equal(await page.locator('#recent-rail').count(),1);
  await page.locator('#recent-rail .game-card[data-game=g0]').focus();await page.waitForTimeout(100);
 
  /* 4. Controller: A launches from Home, Y searches, X plays from the library, Menu opens options */

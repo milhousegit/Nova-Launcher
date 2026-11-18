@@ -12,10 +12,10 @@
   {id:'settings',label:'Apri le impostazioni',key:'Ctrl+,',pad:null},
   {id:'home',label:'Vai alla Home',key:'h',pad:null},
   {id:'library',label:'Vai alla Libreria',key:'l',pad:null},
-  {id:'sectionPrev',label:'Voce precedente del menu',key:'q',pad:4},
-  {id:'sectionNext',label:'Voce successiva del menu',key:'e',pad:5},
-  {id:'pagePrev',label:'Scheda precedente della pagina',key:'PageUp',pad:6},
-  {id:'pageNext',label:'Scheda successiva della pagina',key:'PageDown',pad:7}
+  {id:'sectionPrev',label:'Scheda precedente della pagina',key:'q',pad:4},
+  {id:'sectionNext',label:'Scheda successiva della pagina',key:'e',pad:5},
+  {id:'pagePrev',label:'Voce precedente del menu',key:'PageUp',pad:6},
+  {id:'pageNext',label:'Voce successiva del menu',key:'PageDown',pad:7}
  ];
  const ids=actions.map(a=>a.id);
  /* Extra keys that always work next to the configurable one. */

@@ -116,10 +116,8 @@
  const baseSection=changeSection;
  changeSection=function(delta){
   if(gate()||veilVisible())return;
-  /* LB/RB walk the top menu; inside a game page or a panel they still change its tabs. */
-  if(panels.length||detailGame)return baseSection(delta);
-  if(typeof shopGame!=='undefined'&&shopGame&&page==='explore')return baseSection(delta);
-  changeMain(delta);
+  /* LB/RB change the tabs of the page in view: game page, store page, Explore, panels. */
+  return baseSection(delta);
  };
  const quickPlayTarget=el=>consoleState().quickPlay!==false&&upperHome()&&!!el?.matches?.('#recent-rail .game-card[data-game]')&&!!activeCopy(game(el.dataset.game)||{})?.installed;
  const baseConfirm=confirm;
@@ -147,8 +145,8 @@
   if(g){if(page==='home')openDetails(g);else playGame(g);return;}
   if(upperHome()&&selected)openDetails(selected);
  }
- /* LT/RT change the tabs of the page in view (Esplora), and the page elsewhere. */
- function pageTabs(delta){if(!panels.length&&!detailGame&&page==='explore')baseSection(delta);else changeMain(delta);}
+ /* LT/RT walk the top menu (Home, Libreria, Esplora…), from any page that is not covered by a panel. */
+ function pageTabs(delta){if(panels.length)return;if(detailGame||typeof shopGame!=='undefined'&&shopGame)back();changeMain(delta);}
  function perform(action){
   if(gate()||veilVisible())return;
   switch(action){
@@ -275,6 +273,10 @@
   'shortcuts-reset':async()=>{try{state.settings.shortcuts=await call('shortcutsSave',{keys:{},pad:{}});toast('Comandi predefiniti ripristinati');}catch{}drawPanel();prompts();},
   'help-open':()=>openHelp(),
   'windows-settings':()=>openPanel('Impostazioni di Windows','<p>Si aprono sopra Nova. Chiudi la finestra di Windows per tornare qui.</p>'+(consoleState().settingsPages||[]).filter(p=>windowsPages[p]).map(p=>row(windowsPages[p],'','settings','',`data-win-page="${p}"`)).join('')),
+  'hide-game':()=>{const g=detailGame||selected;if(!g)return;openPanel('Nascondere il gioco?',`<p><strong>${esc(g.title)}</strong> non comparirà più in Home, Libreria e ricerca. Non viene rimosso dalla libreria né disinstallato: puoi farlo riapparire quando vuoi da Impostazioni › Account e librerie › Giochi nascosti.</p>${row('Nascondi','hide-game-confirm','check')}${row('Annulla','back-panel','close')}`);},
+  'hide-game-confirm':async()=>{const g=detailGame||selected;if(!g)return;adopt(await call('hideGame',{id:g.id,value:true}));allPanelsClosed();if(detailGame)back();else render(true);toast('Gioco nascosto · lo ritrovi in Impostazioni');},
+  'hidden-games':()=>openPanel('Giochi nascosti',()=>{const list=state.settings.hiddenGames||[];return list.length?`<p>Questi giochi sono ancora nella tua libreria, ma Nova non li mostra. Scegline uno per farlo riapparire.</p>${list.map(g=>row(esc(g.title),'unhide-game','library','Mostra di nuovo',`data-id="${esc(g.id)}"`)).join('')}`:'<p>Non hai giochi nascosti. Per nasconderne uno, premi il tasto Menu sulla sua copertina e scegli “Nascondi da Nova”.</p>';}),
+  'unhide-game':async el=>{const id=el?.dataset.id;if(!id)return;adopt(await call('hideGame',{id,value:false}));toast('Il gioco è di nuovo visibile');closePanel();render(true);act('hidden-games');},
   'add-local-game':async()=>{const added=await call('addLocalGame');if(!added)return;adopt(added.library);const g=game(added.id);toast('Gioco aggiunto alla libreria');if(g){allPanelsClosed();openDetails(g);}},
   'remove-local-game':async()=>{const g=detailGame||selected;adopt(await call('removeLocalGame',{id:g.id}));allPanelsClosed();if(detailGame&&!game(detailGame.id))back();else render(true);toast('Gioco rimosso dalla libreria');},
   'launch-method':()=>{const g=detailGame||selected,current=state.settings.launchMethods?.[activeCopy(g)?.id]||'auto';openPanel('Metodo di avvio',`<p>Nova sceglie da sola la strada più diretta. Cambia solo se un gioco non parte come ti aspetti.</p>${[['auto','Automatico','Eseguibile quando basta, store in background quando serve'],['direct','Diretto','Avvia sempre l’eseguibile del gioco'],['store','Tramite lo store','Lascia avviare il gioco al suo client']].map(([id,title,sub])=>row(title,'',current===id?'check':'play',sub,`data-launch-method="${id}"`)).join('')}<p class="note">Licenze, accesso online e anti-cheat restano gestiti dallo store: se un gioco li richiede, il suo client si apre comunque.</p>`);},
@@ -323,18 +325,18 @@
  };
  const baseOptions=gameOptionsMarkup;
  gameOptionsMarkup=function(g){
-  const copy=activeCopy(g);let html=baseOptions(g);
+  const copy=activeCopy(g);let html=baseOptions(g)+`<div class="panel-section"><h3>Visibilità</h3>${row('Nascondi da Nova','hide-game','close','Resta nella libreria · lo ritrovi nelle impostazioni')}</div>`;
   if(copy?.installed){const method=state.settings.launchMethods?.[copy.id]||'auto';html+=`<div class="panel-section"><h3>Avvio</h3>${row('Metodo di avvio','launch-method','play',{auto:'Automatico · la strada più diretta',direct:'Diretto · eseguibile del gioco',store:'Tramite lo store'}[method])}${g.copies?.some(c=>c.source==='Locale')?row('Rimuovi il gioco aggiunto a mano','remove-local-game','close','Il gioco resta installato sul disco'):''}</div>`;}
   return html;
  };
 
  /* ── Hints: what the focused element does, on the device in use ────────── */
  function contextHints(){
-  const g=focusedGame(),sections=hint('lb','')+hint('rb','Menu'),pages=sections;
+  const g=focusedGame(),sections=hint('lt','')+hint('rt','Menu'),pages=sections;
   if(detailGame)return hint('a','Seleziona')+hint('b','Indietro')+hint('x',playState(game(detailGame.id)||detailGame).text)+hint('menu','Opzioni')+hint('lb','')+hint('rb','Cambia scheda');
   if(g&&page==='home'&&lower<0){const quick=quickPlayTarget(document.activeElement);return hint('a',quick?playState(g).text:'Dettagli')+(quick?hint('x','Dettagli'):'')+hint('y','Cerca')+hint('menu','Opzioni')+sections;}
   if(g&&page==='library')return hint('a','Dettagli')+hint('x',playState(g).text)+hint('y','Cerca')+hint('menu','Opzioni')+pages;
-  return hint('a','Seleziona')+hint('b','Indietro')+hint('y','Cerca')+hint('view','Comandi')+(page==='explore'?sections+hint('lt','')+hint('rt','Schede'):sections);
+  return hint('a','Seleziona')+hint('b','Indietro')+hint('y','Cerca')+hint('view','Comandi')+(page==='explore'?sections+hint('lb','')+hint('rb','Schede'):sections);
  }
  const basePrompts=prompts;
  prompts=function(){basePrompts();if(panels.length||gate())return;const hints=$('#footer .hints');if(hints)hints.innerHTML=contextHints();};
