@@ -23,6 +23,7 @@ const init=()=>{
   case 'systemUpdates':return {supported:true,rebootRequired:false,system:[{title:'2026-11 Cumulative Update for Windows 11 (KB5070000)',size:6.2e8,downloaded:true}],drivers:[{title:'AMD - Display - 32.0.21025.1',size:8.4e8},{title:'Realtek - Net - 10.72.524.2024',size:1.2e7}]};
   case 'downloads':return {items:[{id:'steam:1004',gameId:'g4',title:'Echoes of Tide',source:'Steam',cover:games[4].cover,progress:.62,status:'active'},{id:'hydra:9',gameId:'g9',title:'Wild Atlas',source:'Hydra',cover:games[9].cover,progress:.18,status:'paused'}],active:1,progress:.62};
   case 'discordOpen':case 'discordVoice':case 'discordVoiceCommand':{const person=(id,name,mute)=>({id,name,mute,avatar:svg('#64748b','#1e293b')});return {linked:true,capable:true,ready:true,fresh:true,guildsLoaded:true,selfMute:false,selfDeaf:false,call:{id:'c1',guildId:'s1',name:'Lobby',type:0,members:[person('1','Marta'),person('2','Luca',true),person('3','Giulia')]},guilds:[{id:'s1',name:'Serata giochi',channels:[{id:'c1',name:'Lobby',members:[person('1','Marta'),person('2','Luca',true),person('3','Giulia')]},{id:'c2',name:'Coop',members:[]}]},{id:'s2',name:'Amici di sempre',channels:[{id:'c3',name:'Generale',members:[person('4','Paolo')]}]}]};}
+  case 'explore':case 'exploreCached':return null;
   case 'activity':return {id:p.id};case 'details':return games.find(g=>g.id===p.id);
   default:return [];}}};
  /* A controller whose buttons the test can press. */
@@ -50,8 +51,10 @@ const init=()=>{
  const cardWidth=await page.evaluate(()=>document.querySelector('#recent-rail .game-card').getBoundingClientRect().width);
  assert(cardWidth>=200,'covers are large at 1080p: '+cardWidth);
  const hints=await text('#footer .hints');assert(/Play/.test(hints)&&/Search/.test(hints),'contextual hints: '+hints);
- assert.equal(await page.locator('.home .home-tabs').count(),0,'News and Apps live below Home, not beside the games');
- assert.equal(await page.locator('.home .down').count(),1);
+ assert.equal(await page.locator('.home .home-tabs').count(),0,'News and Apps are pages of the top menu, not tabs on Home');
+ assert.equal(await page.locator('.home .down').count(),0);
+ assert.deepEqual(await page.evaluate(()=>[...document.querySelectorAll('header nav button')].map(b=>b.dataset.page)),['home','library','explore','news','apps','profile','settings'],'one menu at the top for every page');
+ assert.deepEqual(await page.evaluate(()=>[...document.querySelectorAll('header nav [data-prompt]')].map(e=>e.dataset.prompt)),['lb','rb'],'the bumpers sit on the two sides of the menu');
  await page.screenshot({path:path.join(out,'01-home.png')});
 
  /* 2. One press starts the game; states follow the session */
@@ -82,13 +85,17 @@ const init=()=>{
  assert.equal(await page.evaluate(()=>document.getElementById('overlay').hidden),true,'the session menu closes when the game ends');
  assert.equal(await text('.hero [data-action=play]'),'Play');
 
- /* 3. Sections with Q/E and the controller bumpers */
- await page.keyboard.press('ArrowDown');await page.waitForTimeout(350);
- assert.equal(await text('.home-tabs .active'),'News','down from the games opens News below');
- await press(5);await page.waitForTimeout(350);assert.equal(await text('.home-tabs .active'),'Apps');
+ /* 3. The top menu with Q/E and the controller bumpers */
+ const active=()=>text('header nav button.active');
+ await press(5);await page.waitForTimeout(350);assert.equal(await active(),'Library','RB moves to the next page of the menu');
  assert.equal(await page.evaluate(()=>document.body.dataset.input),'xbox');
- assert(/LB/.test(await text('.home-tabs'))&&/RB/.test(await text('.home-tabs')),'bumper glyphs follow the device');
- await press(1);await page.waitForTimeout(350);assert.equal(await page.locator('#recent-rail').count(),1,'Back returns to the games');
+ assert(/LB/.test(await text('header nav'))&&/RB/.test(await text('header nav')),'bumper glyphs follow the device');
+ await press(5);await page.waitForTimeout(350);await press(5);await page.waitForTimeout(350);assert.equal(await active(),'News');
+ assert.equal(await page.locator('.section-page[data-section=news]').count(),1,'News is its own page');
+ await press(5);await page.waitForTimeout(350);assert.equal(await active(),'Apps');assert.equal(await page.locator('.section-page[data-section=apps] .client').count(),8);
+ for(let i=0;i<4;i++){await press(4);await page.waitForTimeout(350);}
+ assert.equal(await active(),'Home','LB walks back to Home');assert.equal(await page.locator('#recent-rail').count(),1);
+ await page.locator('#recent-rail .game-card[data-game=g0]').focus();await page.waitForTimeout(100);
 
  /* 4. Controller: A launches from Home, Y searches, X plays from the library, Menu opens options */
  await press(15,80);await page.waitForTimeout(120);

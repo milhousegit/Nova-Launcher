@@ -101,7 +101,7 @@
   const list=homeGames();
   /* The first games are the ones most likely to be started: only they are worth decoding right away. */
   const cards=list.map((g,i)=>{let html=cover(g,g.id===selected?.id);if(i<8)html=html.replace(' loading="lazy"',' loading="eager"');return html;}).join('');
-  return `<section class="home"><div id="hero-slot">${heroMarkup(selected)}</div><div class="recent"><div class="rail-head"><h2>I tuoi giochi</h2><small><b>${state.games.length}</b> <span>giochi in libreria</span></small></div><div class="rail" id="recent-rail">${cards}${state.games.length?`<button class="rail-more" data-page="library" aria-label="Tutta la libreria">${icon('library')}<strong>Tutta la libreria</strong><small><b>${state.games.length}</b> <span>giochi</span></small></button>`:''}</div></div><button class="down" data-action="lower">${icon('down')} Novità e app</button></section>`;
+  return `<section class="home"><div id="hero-slot">${heroMarkup(selected)}</div><div class="recent"><div class="rail-head"><h2>I tuoi giochi</h2><small><b>${state.games.length}</b> <span>giochi in libreria</span></small></div><div class="rail" id="recent-rail">${cards}${state.games.length?`<button class="rail-more" data-page="library" aria-label="Tutta la libreria">${icon('library')}<strong>Tutta la libreria</strong><small><b>${state.games.length}</b> <span>giochi</span></small></button>`:''}</div></div></section>`;
  };
  lowerMarkup=function(){return `<section class="lower-page"><div class="lower-heading">${sectionTabs(true)}</div><div id="lower-content">${lower===0?newsMarkup():appsMarkup()}</div></section>`;};
  document.addEventListener('click',e=>{const tab=e.target.closest?.('[data-home-tab]');if(tab&&!panels.length)changeLower(Number(tab.dataset.homeTab));});
@@ -116,8 +116,9 @@
  const baseSection=changeSection;
  changeSection=function(delta){
   if(gate()||veilVisible())return;
-  if(panels.length||detailGame||page==='explore')return baseSection(delta);
-  if(page==='home'){const order=[-1,0,1];window.novaSounds?.play('navigate');changeLower(order[(order.indexOf(lower)+delta+order.length)%order.length]);return;}
+  /* LB/RB walk the top menu; inside a game page or a panel they still change its tabs. */
+  if(panels.length||detailGame)return baseSection(delta);
+  if(typeof shopGame!=='undefined'&&shopGame&&page==='explore')return baseSection(delta);
   changeMain(delta);
  };
  const quickPlayTarget=el=>consoleState().quickPlay!==false&&upperHome()&&!!el?.matches?.('#recent-rail .game-card[data-game]')&&!!activeCopy(game(el.dataset.game)||{})?.installed;
@@ -146,6 +147,8 @@
   if(g){if(page==='home')openDetails(g);else playGame(g);return;}
   if(upperHome()&&selected)openDetails(selected);
  }
+ /* LT/RT change the tabs of the page in view (Esplora), and the page elsewhere. */
+ function pageTabs(delta){if(!panels.length&&!detailGame&&page==='explore')baseSection(delta);else changeMain(delta);}
  function perform(action){
   if(gate()||veilVisible())return;
   switch(action){
@@ -159,8 +162,8 @@
    case 'library':if(!panels.length)go('library');break;
    case 'sectionPrev':changeSection(-1);break;
    case 'sectionNext':changeSection(1);break;
-   case 'pagePrev':changeMain(-1);break;
-   case 'pageNext':changeMain(1);break;
+   case 'pagePrev':pageTabs(-1);break;
+   case 'pageNext':pageTabs(1);break;
   }
  }
  /* Keyboard: returns true when the key was used here, so the base handler leaves it alone. */
@@ -327,11 +330,11 @@
 
  /* ── Hints: what the focused element does, on the device in use ────────── */
  function contextHints(){
-  const g=focusedGame(),sections=hint('lb','')+hint('rb','Sezioni'),pages=hint('lt','')+hint('rt','Pagine');
+  const g=focusedGame(),sections=hint('lb','')+hint('rb','Menu'),pages=sections;
   if(detailGame)return hint('a','Seleziona')+hint('b','Indietro')+hint('x',playState(game(detailGame.id)||detailGame).text)+hint('menu','Opzioni')+hint('lb','')+hint('rb','Cambia scheda');
   if(g&&page==='home'&&lower<0){const quick=quickPlayTarget(document.activeElement);return hint('a',quick?playState(g).text:'Dettagli')+(quick?hint('x','Dettagli'):'')+hint('y','Cerca')+hint('menu','Opzioni')+sections;}
   if(g&&page==='library')return hint('a','Dettagli')+hint('x',playState(g).text)+hint('y','Cerca')+hint('menu','Opzioni')+pages;
-  return hint('a','Seleziona')+hint('b','Indietro')+hint('y','Cerca')+hint('view','Comandi')+(page==='home'?sections:page==='explore'?hint('lb','')+hint('rb','Cambia scheda'):pages);
+  return hint('a','Seleziona')+hint('b','Indietro')+hint('y','Cerca')+hint('view','Comandi')+(page==='explore'?sections+hint('lt','')+hint('rt','Schede'):sections);
  }
  const basePrompts=prompts;
  prompts=function(){basePrompts();if(panels.length||gate())return;const hints=$('#footer .hints');if(hints)hints.innerHTML=contextHints();};

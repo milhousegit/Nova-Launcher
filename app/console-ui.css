@@ -287,3 +287,7 @@ body[data-call=on] .discord-toggle:before{content:'';position:absolute;left:5px;
 .voice-people{display:flex;flex-wrap:wrap;gap:8px}
 .voice-person{display:inline-flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;border-radius:999px;background:#ffffff0f;font-size:13px}
 .voice-person .voice-avatar{width:26px;height:26px;border:0}
+/* Game page: a very light, fixed blur on the artwork behind it. It is fixed on purpose: a blur that
+   changed while scrolling would be redrawn every frame. */
+body[data-page=details] #backdrop .scene.visible{filter:blur(5px) saturate(1.04);transform:scale(1.035)}
+body.reduce-motion[data-page=details] #backdrop .scene.visible{transform:scale(1.035)}
