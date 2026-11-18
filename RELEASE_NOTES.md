@@ -1,3 +1,21 @@
+## Nova Launcher 0.1.16
+
+### Changed
+
+- **Controls**: LT and RT now move between the pages of the top menu, from any page. LB and RB change the tabs inside the page you are on (game page, Explore, store page). The on-screen hints and the controls guide show the new buttons.
+- **Home**: scrolling down from the home no longer opens News and Apps; they are pages of the top menu.
+- **Updates (Windows)**: "Restart and install" now opens the setup window once Nova has closed, instead of installing silently. The setup has Nova's own artwork. The update from 0.1.15 to this version still runs silently, because the installed version handles it.
+
+### Added
+
+- **Game options everywhere**: the Menu button opens a game's options on any cover, not only in some rows.
+- **Hide from Nova**: a game can be hidden from Home, Library and search. It stays in your library and is not uninstalled. Hidden games are listed in Settings > Accounts and libraries > Hidden games, where you can bring them back.
+
+### Validation and platform limitations
+
+- Automated tests and the full interface check pass, including the new menu buttons.
+- Not yet run on a Windows PC: the new setup window and its artwork, and hiding and showing a game, have not been tried in the real app. The changed code is shared by Windows and Linux, except the setup, which is Windows only.
+
 ## Nova Launcher 0.1.15
 
 ### Changed
