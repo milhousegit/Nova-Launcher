@@ -48,7 +48,7 @@ function chosen(g){g={...g,copies:g.copies.filter(c=>c.installed||storeConnected
 function withOverrides(c){const user=preferences.gameFolders?.[c.id],chosenExe=preferences.gameExecutables?.[c.id],auto=preferences.autoGames?.[c.id]||{},folder=user||c.folder||auto.folder||'';const inside=(file,dir)=>!!file&&!!dir&&path.resolve(file).toLowerCase().startsWith(path.resolve(dir).toLowerCase()+path.sep);let executable=chosenExe||c.executable||'';if(!chosenExe&&user&&executable&&!inside(executable,user))executable='';if((!executable||!fs.existsSync(executable))&&auto.executable&&fs.existsSync(auto.executable)&&(!user||inside(auto.executable,user)))executable=auto.executable;const options=preferences.launchOptions?.[c.id];return {...c,folder,executable,arguments:options!==undefined?options:c.arguments,autoDetected:!user&&!c.folder&&!!auto.folder||!chosenExe&&!c.executable&&!!auto.executable};}
 function publicCopy(c){return c?{...c,folderExists:!!c.folder&&fs.existsSync(c.folder)&&fs.statSync(c.folder).isDirectory(),executableExists:!!c.executable&&fs.existsSync(c.executable)}:null;}
 const appIcons=require('./app-icons.cjs')({root:L.root,data:L.data,run:I.run,media:L.media});
-const gameInfo=require('./game-info.cjs')({data:L.data});
+const gameInfo=require('./game-info.cjs')({data:L.data,resolve:g=>newsService.resolve(g)});
 const discovery=require('./discovery.cjs')({data:L.data,library:()=>eligibleLibrary(),preferences:()=>preferences,save,gameInfo,sg});
 const newsService=require('./news.cjs')({data:L.data});const saveLocations=require('./saves.cjs')({root:L.root,data:L.data,run:I.run});
 const locator=require('./game-locator.cjs').create();
