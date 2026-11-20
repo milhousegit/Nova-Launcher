@@ -1,3 +1,16 @@
+## Nova Launcher 0.1.17
+
+### Added
+
+- **Epic play time**: Nova now reads your play time from your Epic Games account and shows it on Epic games.
+- **Epic game details**: Epic games get their description, developer, publisher, release date and screenshots from the Epic catalog.
+- **Trailers in galleries**: game and store galleries now show video trailers first, followed by the images. Games without a Steam id find their trailers by title.
+
+### Validation and platform limitations
+
+- Automated tests and the full interface check pass. Trailer playback was checked in the app.
+- Not yet tried with a real Epic account: play time and catalog details come from Epic's services and have only been tested against sample responses. The changes are shared by Windows and Linux.
+
 ## Nova Launcher 0.1.16
 
 ### Changed
